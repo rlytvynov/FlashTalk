@@ -4,8 +4,8 @@ FlashTalk е чат платформа с поддръжка на стаи и л
 
 ## Структура на проекта
 - `DR[n]` — папки за конкретни части
-- `project/frontend/` — клиентска част (React, Vue или друг фреймворк)
-- `project/backend/` — сървърна част (Node.js, Python или друг стек)
+- `project/frontend/` — клиентска част (Vite, React + Redux, Typescript)
+- `project/backend/` — сървърна част (Node.js, Express.js, Typescript)
 
 ## Възможности
 - Създаване и управление на чат стаи
