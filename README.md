@@ -14,4 +14,4 @@ FlashTalk е чат платформа с поддръжка на стаи и л
 - Уеб сокети за мигновен обмен на съобщения
 
 ### Повече информация можете да намерите в 
- `frontend/README.md` и `backend/README.md`.
+ `project/frontend/README.md` и `project/backend/README.md`.
