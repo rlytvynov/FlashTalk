@@ -1,54 +1,67 @@
-# React + TypeScript + Vite
+# 🚀 React + TypeScript + Vite Проект
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Този проект е стартова точка за разработка на React приложение с TypeScript.
 
-Currently, two official plugins are available:
+## 📦 Инсталиране и стартиране
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Уверете се, че имате инсталиран **Node.js** (препоръчителна версия: `18+`).  
+След това инсталирайте зависимостите:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```sh
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+За да стартирате локалния сървър, използвайте командата:
+```sh
+npm run dev
 ```
+След това приложението ще бъде достъпно на: http://localhost:3000.
+
+## 🔧 Структура на фронтенда
+frontend/
+├── src/                     # Основни файлове на проекта
+│   ├── components/          # React Components
+│   ├── hooks/               # React Hooks
+│   ├── pages/               # Страници на фронтенда
+│   ├── store/               # Redux хранилище
+│   ├── types/               # TypeScript типове (interfaces) описващи обекти
+│   ├── index.css            # Основен CSS файл
+│   ├── main.tsx             # Основен входен файл
+│   ├── App.tsx              # Главен компонент на приложението
+├── public/                  # Публични файлове (favicon, index.html)
+├── dist/                    # Продукционен билд (създава се след `npm run build`)
+├── package.json             # Конфигурационен файл за NPM
+├── tsconfig.json            # Конфигурация за TypeScript
+├── vite.config.ts           # Конфигурация на Vite
+
+## 🚀 Използвани технологии
+
+⚛️ React – библиотека за изграждане на потребителски интерфейси
+📜 TypeScript – статична типизация за по-добра поддръжка на кода
+⚡  Vite – бърз билд инструмент (ако се използва)
+🎨 CSS Modules (ако е необходимо)
+
+## ❓ Често задавани въпроси
+
+### Командата `npm run` dev не работи
+Уверете се, че:
+
+Node.js е инсталиран (`node -v` трябва да покаже версия 18+).
+Всички зависимости са инсталирани (`npm install`).
+
+### Как да добавя нова библиотека?
+Използвайте командата:
+
+```sh
+npm install package-name
+```
+
+За да инсталирате зависимост само за разработка (`-D):
+
+```sh
+npm install package-name -D
+```
+
+# Разработено с ❤️ и TypeScript
+
+Този `README.md` файл е готов за използване! 🚀
