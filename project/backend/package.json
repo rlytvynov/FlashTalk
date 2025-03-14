@@ -1,0 +1,35 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "npx tsc",
+        "start": "node dist/index.js",
+        "dev": "nodemon -r tsconfig-paths/register src/index.ts"
+    },
+    "keywords": [
+        "chat",
+        "message",
+        "room",
+        "authorization"
+    ],
+    "author": "",
+    "license": "MIT",
+    "description": "Server side of FlashTalk chat",
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "socket.io": "^4.8.1",
+        "tsconfig-paths": "^4.2.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.13.10",
+        "concurrently": "^9.1.2",
+        "nodemon": "^3.1.9",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.8.2"
+    }
+}

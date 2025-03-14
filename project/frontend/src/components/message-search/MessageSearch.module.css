@@ -1,0 +1,127 @@
+.messageSearch {
+    position: relative; /* Родительский контейнер */
+    width: 400px;
+    max-width: 400px; /* Можно изменить по дизайну */
+}
+
+.messageSearch > input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    outline: none;
+}
+
+.messageSearch .foundMessagesAmount {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.5rem;
+    background-color: rgb(241,241,241);
+    border: 1px solid #ddd;
+    border-top: none;
+    border-bottom: none;
+}
+
+.messageSearch .foundMessagesAmount span {
+    color: rgb(182,182,182);
+}
+
+.messageSearch .foundMessagesAmount button {
+    all: unset;
+    text-decoration: underline;
+    color: #007bff;
+    cursor: pointer;
+}
+
+.messageSearch > .foundMessages {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: fit-content;
+    z-index: 10; /* Убеждаемся, что список находится поверх других элементов */
+}
+
+
+.messageSearch > .foundMessages > .foundMessagesContent {
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Стиль для каждого найденного сообщения */
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage {
+    width: 100%;
+    display: flex;
+    justify-items: flex-start;
+    gap: 1rem;
+    padding: 0.5rem;
+    height: fit-content;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+/* Убираем границу у последнего сообщения */
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage:last-child {
+    border-bottom: none;
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageSender {
+    width: 50px !important; /* Размер круга */
+    height: 50px;
+    border-radius: 50%; /* Делаем круг */
+    background-color: #007bff; /* Цвет фона (можно изменить) */
+    color: white; /* Цвет текста */
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase; /* Делаем буквы заглавными */
+    user-select: none; /* Запрещаем выделение текста */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Добавляем тень */
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent {
+    width: 100%;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .foundMessageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .foundMessageHeader h2 {
+    font-weight: 700;
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .foundMessageHeader .foundMessageDate {
+    color: rgb(150, 150, 150);
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .message {
+    color: rgb(150, 150, 150);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .message > img {
+    max-width: 2rem;
+    max-height: 2rem;
+    border-radius: 0.2rem;
+}
