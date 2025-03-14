@@ -18,7 +18,7 @@ npm install
 * `SERVER_PORT=8080`
 * `... DB_[VARIABLES]`
 
-3. За да стартирате локалния сървър в development mode (рекомендовано за `development mode`), използвайте командата:
+3. За да стартирате локалния сървър в development mode (препоръчително за `development mode`), използвайте командата:
 ```sh
 npm run dev
 ```
