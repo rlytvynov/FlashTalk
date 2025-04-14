@@ -7,6 +7,7 @@ import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
 import corsOptions from "@config/corsConfig";
 import responseMiddleware from "@middlewares/responseTypeMiddlware";
 import * as userController from "@controllers/usersController";
+import * as channelsController from "@controllers/channelsController";
 
 declare global {
     namespace Express {
@@ -28,7 +29,8 @@ app.use(responseMiddleware)
 /**
  * Бизнес-логика - авторизация и др http запроси (DR1, DR3, DR5)
  */
-app.get('/', userController.getUser);
+app.get('/api', userController.getUser);
+app.get("/api/messages/search", channelsController.getSearchedMessages);
 /**
  * Сокет соединение - DR4
  */

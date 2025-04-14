@@ -13,10 +13,10 @@ export interface Image {
 
 export interface Message {
     /**
-     * Room ID.
-     * ID of the room, where message was sent.
+     * Channel ID.
+     * ID of the channel, where message was sent.
      */
-    roomId: number
+    channelId: string
     /**
      * Sender of the message.
      * The nickname (unique) of the user who sent the message.

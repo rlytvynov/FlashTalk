@@ -1,11 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
-import roomsReducer from '@/store/roomsSlice.ts'
-import foundMessagesReducer from '@/store/fondedMessagesSlice.ts'
+import channelsReducer from '@/store/channelsSlice.ts'
 
 const store = configureStore({
     reducer: {
-        roomsData: roomsReducer,
-        foundMessagesData: foundMessagesReducer
+        channelsData: channelsReducer,
     }
 })
 

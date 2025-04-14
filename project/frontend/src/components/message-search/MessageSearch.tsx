@@ -1,42 +1,43 @@
 import {useEffect, useRef, useState} from "react";
-import {Message} from "@/types/message.ts"
-import styles from "./MessageSearch.module.css"
+import styles from "./MessageSearch.module.css";
 import store, {RootState} from "@/store/store.ts";
-import {setFoundedMessages} from "@/store/fondedMessagesSlice.ts";
 import {useSelector} from "react-redux";
+import {fetchSearchedMessages, utilizeSearchedMessages} from "@/store/channelsSlice.ts";
 
-interface Props {
-    messages: Message[];
-}
+const LIMIT = 10;
 
-function MessageSearch({ messages }: Props) {
-    const {foundedMessages} = useSelector((state: RootState) => state.foundMessagesData)
+function MessageSearch() {
+    const {error, loading, activeChannelId} = useSelector((state: RootState) => state.channelsData);
+    const searchedMessages = useSelector((state: RootState) =>
+        state.channelsData.channels.find(channel => channel.id === activeChannelId)?.searchedMessages || {data: [], hasMore: false}
+    );
+
     const inputRef = useRef<HTMLInputElement>(null);
     const searchContainerRef = useRef<HTMLDivElement>(null);
     const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
 
-    const handleSearch = () => {
-        const query = inputRef.current?.value.toLowerCase() || "";
+    const handleSearch = async () => {
+        const query = inputRef.current?.value.toLowerCase().trim() || "";
         if(!query) {
-            store.dispatch(setFoundedMessages([]))
+            store.dispatch(utilizeSearchedMessages(activeChannelId));
             return;
         }
-        const results = messages.filter((msg) =>
-            typeof msg.data === "string"
-                ? msg.data.toLowerCase().includes(query)
-                : msg.data.altText?.toLowerCase().includes(query)
-        );
-        store.dispatch(setFoundedMessages(results.length > 0 ? results : []));
+        await store.dispatch(fetchSearchedMessages({channelId: activeChannelId, query: query.toLowerCase(), offset: 0, limit: LIMIT})).unwrap()
     };
 
-    const handleUploadMore = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        console.log("Load all matches clicked!");
+    const handleUploadMore = async (limit: number) => {
+        const query = inputRef.current?.value.trim().toLowerCase() || "";
+        await store.dispatch(fetchSearchedMessages({
+            channelId: activeChannelId,
+            query,
+            limit,
+            offset: searchedMessages.data.length
+        })).unwrap();
     };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if ( searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
                 setIsInputFocused(false);
             }
         };
@@ -54,22 +55,35 @@ function MessageSearch({ messages }: Props) {
                 placeholder="Search..."
                 ref={inputRef}
                 onFocus={() => setIsInputFocused(true)}
-                onChange={handleSearch}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        handleSearch(); // Тук викаме Вашата функция
+                    }
+                }}
                 style={{
-                    borderBottomLeftRadius: isInputFocused && foundedMessages.length ? "0px" : "8px",
-                    borderBottomRightRadius: isInputFocused && foundedMessages.length ? "0px" : "8px"
+                    borderBottomLeftRadius: isInputFocused && searchedMessages.data.length ? "0px" : "8px",
+                    borderBottomRightRadius: isInputFocused && searchedMessages.data.length ? "0px" : "8px"
                 }}
             />
-            {isInputFocused && foundedMessages.length > 0 && (
+            {loading && <div className={styles.loading}>Loading...</div>}
+            {error && <div className={styles.error}>{error}</div>}
+            {isInputFocused && searchedMessages.data.length > 0 && (
                 <div className={styles.foundMessages}>
                     <div className={styles.foundMessagesAmount}>
-                        <span>Found {foundedMessages.length} messages</span>
-                        <button onClick={handleUploadMore} className={styles.foundMessagesAmountButton}>
-                            Load all matches
-                        </button>
+                        <span>Found {searchedMessages.data.length} messages</span>
+                        {searchedMessages.hasMore && (
+                            <button onClick={() => handleUploadMore(LIMIT)} className={styles.foundMessagesAmountButton}>
+                                Load more
+                            </button>
+                        )}
+                        {searchedMessages.hasMore && (
+                            <button onClick={() => handleUploadMore(10000000)} className={styles.foundMessagesAmountButton}>
+                                Load all matches
+                            </button>
+                        )}
                     </div>
                     <div className={styles.foundMessagesContent}>
-                        {foundedMessages.map((msg, index) => (
+                        {searchedMessages.data.map((msg, index) => (
                             <div key={index} className={styles.foundMessage}>
                                 <div className={styles.foundMessageSender}>
                                     {msg.senderNickname.slice(0, 2)}
@@ -95,6 +109,5 @@ function MessageSearch({ messages }: Props) {
         </div>
     );
 }
-
 
 export default MessageSearch;
