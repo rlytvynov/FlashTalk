@@ -1,0 +1,195 @@
+.channelContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #c4e3fa;
+}
+    .channelContainer .channelHeaderContainer {
+    padding: 0.8rem;
+    color: #000000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: var(--color-blue-light);
+    border-top-right-radius: 0.5rem;
+    border-bottom: 1px solid var(--color-gray-medium);
+    align-items: center;
+    margin-bottom: 1rem;
+}
+        .channelHeaderContainer .channelPortfolioContainer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+            .channelPortfolioContainer .channelIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: var(--color-blue);
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+            .channelPortfolioContainer .channelShortInfoContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+                .channelShortInfoContainer .channelName {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+                .channelShortInfoContainer .channelMembersOnline {
+    font-size: 1rem;
+    color: #000000;
+}
+            .channelPortfolioContainer .channelMessageSearchContainer {
+    padding: 0.5rem;
+    width: fit-content;
+    margin-left: 2rem;
+}
+            .channelPortfolioContainer .channelInfoContainer {
+    position: relative;
+    margin-left: auto;
+}
+                .channelInfoContainer .channelInfoButton {
+    margin-left: auto;
+    padding: 0.5rem 0.8rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: var(--color-blue);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+                .channelInfoContainer .channelInfoButton:hover {
+    background: var(--color-blue);
+    color: white;
+    transform: scale(1.1);
+}
+    .channelContainer .channelMessagesContainer {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    list-style: none;
+}
+        .channelMessagesContainer .channelMessageContainer {
+    display: flex;
+    gap: 1rem;
+    align-items: start;
+}
+            .channelMessageContainer .messageSenderIconContainer {
+    position: relative;
+}
+                .messageSenderIconContainer .messageSenderIcon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--color-blue);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    user-select: unset;
+}
+                .messageSenderIconContainer .messageSenderOnlineIndicator {
+    position: absolute;
+    top: calc(100% - 0.7rem);
+    right: 0.1rem;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 50%;
+    background: lawngreen;
+    border: 2px solid white;
+}
+                .messageSenderIconContainer .messageSenderOfflineIndicator {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: red;
+    border: 1px solid white;
+}
+            .channelMessageContainer .messageContentContainer {
+    padding: 0.5rem;
+    max-width: 60%;
+    min-width: 10%;
+    width: fit-content;
+    margin-bottom: 0.5rem;
+    background: white;
+    color: var(--color-text-dark);
+    border-radius: 2px 8px 8px 24px;
+    font-size: 1.2rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+            .channelMessageContainer .messageContentContainer.myMessage {
+    background: var(--color-blue);
+    color: white;
+    margin-left: auto;
+    border-radius: 8px 2px 24px 8px; /* Закругление левого нижнего угла */
+}
+                .messageContentContainer .messageSender {
+    font-weight: bold;
+    color: var(--color-blue-dark);
+}
+                .messageContentContainer .messageTime {
+    font-size: 0.8rem;
+    color: var(--color-blue-dark);
+    margin-top: 0.2rem;
+    text-align: right;
+}
+                .messageContentContainer.myMessage .messageTime {
+    color: white;
+    margin-right: 0.3rem;
+}
+    .channelContainer .chatInputContainer {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 1rem;
+}
+        .chatInputContainer input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-gray-medium);
+    border-radius: 0.5rem;
+    background: var(--color-bg-input);
+    font-size: 1.2rem;
+    color: var(--color-text-dark);
+    transition: background 0.3s, border-color 0.3s;
+}
+        .chatInputContainer input:focus {
+    background: var(--color-bg-input-focus);
+    border-color: var(--color-blue);
+    outline: none;
+}
+        .chatInputContainer button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: var(--color-blue);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+        .chatInputContainer button:hover {
+    background: var(--color-blue-dark);
+    transform: scale(1.05);
+}

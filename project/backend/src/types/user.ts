@@ -1,6 +1,7 @@
 export interface User {
-    id: string,
+    id: string
     username: string;
     email: string;
+    password: string; // хеширана
     displayName: string;
 }

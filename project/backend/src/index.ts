@@ -6,8 +6,8 @@ import cors from "cors"
 import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
 import corsOptions from "@config/corsConfig";
 import responseMiddleware from "@middlewares/responseTypeMiddlware";
-import * as userController from "@controllers/usersController";
-import * as channelsController from "@controllers/channelsController";
+import authRouter from "@routes/authRouter";
+import channelsRouter from "@routes/channelsRouter";
 
 declare global {
     namespace Express {
@@ -20,7 +20,7 @@ declare global {
     }
 }
 
-// Basic config
+// Базова конфигурация
 const app = express();
 app.use(cors(corsOptions))
 app.use(express.json())
@@ -29,8 +29,8 @@ app.use(responseMiddleware)
 /**
  * Бизнес-логика - авторизация и др http запроси (DR1, DR3, DR5)
  */
-app.get('/api', userController.getUser);
-app.get("/api/messages/search", channelsController.getSearchedMessages);
+app.use('/api/auth', authRouter);
+app.use('/api/channels', channelsRouter);
 /**
  * Сокет соединение - DR4
  */

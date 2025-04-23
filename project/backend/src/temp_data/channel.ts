@@ -1,0 +1,68 @@
+import {Channel} from "../types/channel";
+export const channels: Channel[] =
+[
+    {
+        id: "0x234",
+        name: "General",
+        description: "This is a channel description. It can contain any information about the channel.",
+        members: [
+            {username: "rlytvynov", displayName: "Bob"},
+            {username: "bbob", displayName: "Roman"},
+            {username: "ccharlie", displayName: "Charlie"},
+            {username: "ddave", displayName: "Dave"}
+        ],
+
+        messages: [
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 49 * 60000).toISOString(), data: "Hi everyone!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 48 * 60000).toISOString(), data: "Hey, how's it going?" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 47 * 60000).toISOString(), data: "All good, thanks. How about you?" },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 46 * 60000).toISOString(), data: "Guys, have you seen the update?" },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 45 * 60000).toISOString(), data: "Yeah, it's awesome!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 44 * 60000).toISOString(), data: "Especially the new control panel." },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 43 * 60000).toISOString(), data: "I loved the dark mode." },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 42 * 60000).toISOString(), data: "By the way, when's the next meeting?" },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 41 * 60000).toISOString(), data: "Friday at 3:00 PM." },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 40 * 60000).toISOString(), data: "I'll be there a bit early." },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 39 * 60000).toISOString(), data: "I might be a little late." },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 38 * 60000).toISOString(), data: "The important thing is to show up!" },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 37 * 60000).toISOString(), data: "Who's going to present?" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 36 * 60000).toISOString(), data: "I'm handling that part." },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 35 * 60000).toISOString(), data: "Let me know if you need help." },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 34 * 60000).toISOString(), data: "I'll prepare the visuals." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 33 * 60000).toISOString(), data: "Thanks everyone for helping out!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 32 * 60000).toISOString(), data: "Anyone want some coffee?" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 31 * 60000).toISOString(), data: "A double for me, please 😄" },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 30 * 60000).toISOString(), data: "I'll go with tea, thanks." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 29 * 60000).toISOString(), data: "Is anyone working from the office today?" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 28 * 60000).toISOString(), data: "I am. Need to pick up some documents." },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 27 * 60000).toISOString(), data: "I'm working from home today." },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 26 * 60000).toISOString(), data: "Same here. Internet's fine luckily." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 25 * 60000).toISOString(), data: "Alright, see you all on Zoom." },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 24 * 60000).toISOString(), data: "Is it the same Zoom link?" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 23 * 60000).toISOString(), data: "Yeah, I checked — it's working." },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 22 * 60000).toISOString(), data: "Please add it to the calendar." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 21 * 60000).toISOString(), data: "Already added to the shared calendar." },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 20 * 60000).toISOString(), data: "Thanks, that’s convenient." },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 19 * 60000).toISOString(), data: "Is anyone having issues with GitHub Actions?" },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 18 * 60000).toISOString(), data: "Yeah, one pipeline failed." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 17 * 60000).toISOString(), data: "I'll check it later." },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 16 * 60000).toISOString(), data: "Great, thanks!" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 15 * 60000).toISOString(), data: "Does anyone have a report template?" },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 14 * 60000).toISOString(), data: "Sending it now." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 13 * 60000).toISOString(), data: "Thanks, Dave!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 12 * 60000).toISOString(), data: "Any news from the new client?" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 11 * 60000).toISOString(), data: "Still waiting, no response yet." },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 10 * 60000).toISOString(), data: "Alright, keep us posted." },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 9 * 60000).toISOString(), data: "Definitely!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 8 * 60000).toISOString(), data: "Great momentum, let’s keep it up!" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 7 * 60000).toISOString(), data: "Yeah, awesome team 💪" },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 6 * 60000).toISOString(), data: "See you on the call!" },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 5 * 60000).toISOString(), data: "Bye-bye!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 4 * 60000).toISOString(), data: "Have a great day!" },
+            { channelId: "0x234", authorId: "3", authorName: "Charlie", date: new Date(Date.now() - 3 * 60000).toISOString(), data: "Talk soon!" },
+            { channelId: "0x234", authorId: "4", authorName: "Dave", date: new Date(Date.now() - 2 * 60000).toISOString(), data: "✌️" },
+            { channelId: "0x234", authorId: "1", authorName: "Roman", date: new Date(Date.now() - 1 * 60000).toISOString(), data: "P.S. Don’t forget to update your tasks!" },
+            { channelId: "0x234", authorId: "2", authorName: "Bob", date: new Date(Date.now() - 0 * 60000).toISOString(), data: "I'll do it this evening." }
+        ]
+    }
+]

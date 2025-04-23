@@ -3,6 +3,8 @@ import styles from "./MessageSearch.module.css";
 import store, {RootState} from "@/store/store.ts";
 import {useSelector} from "react-redux";
 import {fetchSearchedMessages, utilizeSearchedMessages} from "@/store/channelsSlice.ts";
+import {FaSearch, FaTimes} from "react-icons/fa";
+import {formatTimestamp} from "@/utils/formatTimestamp.ts";
 
 const LIMIT = 10;
 
@@ -22,17 +24,26 @@ function MessageSearch() {
             store.dispatch(utilizeSearchedMessages(activeChannelId));
             return;
         }
-        await store.dispatch(fetchSearchedMessages({channelId: activeChannelId, query: query.toLowerCase(), offset: 0, limit: LIMIT})).unwrap()
+
+        try {
+            await store.dispatch(fetchSearchedMessages({channelId: activeChannelId, query: query.toLowerCase(), offset: 0, limit: LIMIT})).unwrap()
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        }
     };
 
     const handleUploadMore = async (limit: number) => {
         const query = inputRef.current?.value.trim().toLowerCase() || "";
-        await store.dispatch(fetchSearchedMessages({
-            channelId: activeChannelId,
-            query,
-            limit,
-            offset: searchedMessages.data.length
-        })).unwrap();
+        try {
+            await store.dispatch(fetchSearchedMessages({
+                channelId: activeChannelId,
+                query,
+                limit,
+                offset: searchedMessages.data.length
+            })).unwrap();
+        } catch (error) {
+            console.error("Error fetching more messages:", error);
+        }
     };
 
     useEffect(() => {
@@ -49,27 +60,27 @@ function MessageSearch() {
     }, []);
 
     return (
-        <div ref={searchContainerRef} className={styles.messageSearch}>
+        <div ref={searchContainerRef} className={styles.messageSearchContainer}>
             <input
                 type="text"
                 placeholder="Search..."
                 ref={inputRef}
                 onFocus={() => setIsInputFocused(true)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        handleSearch(); // Тук викаме Вашата функция
-                    }
-                }}
                 style={{
                     borderBottomLeftRadius: isInputFocused && searchedMessages.data.length ? "0px" : "8px",
                     borderBottomRightRadius: isInputFocused && searchedMessages.data.length ? "0px" : "8px"
                 }}
             />
+            {!searchedMessages.data.length && <FaSearch onClick={handleSearch} style={{position: 'absolute', right: '1rem', top: '32%', cursor: 'pointer'}}/>}
+            {searchedMessages.data.length > 0 &&
+                <FaTimes onClick={() => {store.dispatch(utilizeSearchedMessages(activeChannelId)); inputRef.current!.value = "";}}
+                         style={{position: 'absolute', right: '1rem', top: '32%', cursor: 'pointer'}}
+                />}
             {loading && <div className={styles.loading}>Loading...</div>}
-            {error && <div className={styles.error}>{error}</div>}
+            {error && error.type === "channels/getMessages" && <div className={styles.error}>{error.message}</div>}
             {isInputFocused && searchedMessages.data.length > 0 && (
-                <div className={styles.foundMessages}>
-                    <div className={styles.foundMessagesAmount}>
+                <div className={styles.foundMessagesContainer}>
+                    <div className={styles.foundMessagesAmountContainer}>
                         <span>Found {searchedMessages.data.length} messages</span>
                         {searchedMessages.hasMore && (
                             <button onClick={() => handleUploadMore(LIMIT)} className={styles.foundMessagesAmountButton}>
@@ -82,28 +93,28 @@ function MessageSearch() {
                             </button>
                         )}
                     </div>
-                    <div className={styles.foundMessagesContent}>
+                    <ul className={styles.foundMessagesContentContainer}>
                         {searchedMessages.data.map((msg, index) => (
-                            <div key={index} className={styles.foundMessage}>
+                            <li key={index} className={styles.foundMessageContainer}>
                                 <div className={styles.foundMessageSender}>
-                                    {msg.senderNickname.slice(0, 2)}
+                                    {msg.authorName.slice(0, 2)}
                                 </div>
-                                <div className={styles.foundMessageContent}>
-                                    <div className={styles.foundMessageHeader}>
-                                        <h2>{msg.senderNickname}</h2>
-                                        <span className={styles.foundMessageDate}>{msg.date}</span>
+                                <div className={styles.foundMessageContentContainer}>
+                                    <div className={styles.foundMessageHeaderContainer}>
+                                        <h2>{msg.authorName}</h2>
+                                        <span className={styles.foundMessageDate}>{ formatTimestamp(new Date(msg.date))}</span>
                                     </div>
                                     {typeof msg.data === "string" ? (
-                                        <div className={styles.message}>{msg.data}</div>
+                                        <div className={styles.foundMessageData}>{msg.data}</div>
                                     ) : (
-                                        <div className={styles.message}>
+                                        <div className={styles.foundMessageData}>
                                             <img src={msg.data.url} alt={msg.data.altText || "Image"} />
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 </div>
             )}
         </div>

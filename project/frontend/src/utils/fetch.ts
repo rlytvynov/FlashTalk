@@ -2,8 +2,9 @@ export async function fetchData<T>(url: string, options?: RequestInit): Promise<
     const response = await fetch(url, {
         ...options,
         headers: {
+            'Content-Type': 'application/json',
             ...options?.headers
-        }
+        },
     });
 
     if (!response.ok) {
@@ -18,8 +19,7 @@ export async function fetchDataAuth<T>(url: string, options?: RequestInit): Prom
     return await fetchData(url, {
         ...options,
         headers: {
-            'Authorization': `Bearer ${localStorage.getItem(import.meta.env.VITE_JWT_KEY_TO_LOCAL_STORAGE ?? "")}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${localStorage.getItem("token") ?? ""}`,
         }
     });
 }

@@ -1,10 +1,9 @@
-.messageSearch {
-    position: relative; /* Родительский контейнер */
+.messageSearchContainer {
+    position: relative;
     width: 400px;
-    max-width: 400px; /* Можно изменить по дизайну */
+    max-width: 400px;
 }
-
-.messageSearch > input {
+    .messageSearchContainer input {
     width: 100%;
     padding: 12px 15px;
     font-size: 16px;
@@ -14,8 +13,15 @@
     background-color: #f9f9f9;
     outline: none;
 }
-
-.messageSearch .foundMessagesAmount {
+    .messageSearchContainer .foundMessagesContainer {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: fit-content;
+    z-index: 10; /* Убеждаемся, что список находится поверх других элементов */
+}
+        .foundMessagesContainer .foundMessagesAmountContainer {
     display: flex;
     justify-content: space-between;
     width: 100%;
@@ -24,30 +30,18 @@
     border: 1px solid #ddd;
     border-top: none;
     border-bottom: none;
+    z-index: 100;
 }
-
-.messageSearch .foundMessagesAmount span {
-    color: rgb(182,182,182);
+            .foundMessagesAmountContainer span {
+                color: rgb(182,182,182);
 }
-
-.messageSearch .foundMessagesAmount button {
+            .foundMessagesAmountContainer button {
     all: unset;
     text-decoration: underline;
-    color: #007bff;
+    color: var(--color-blue-dark);
     cursor: pointer;
 }
-
-.messageSearch > .foundMessages {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    height: fit-content;
-    z-index: 10; /* Убеждаемся, что список находится поверх других элементов */
-}
-
-
-.messageSearch > .foundMessages > .foundMessagesContent {
+        .foundMessagesContainer .foundMessagesContentContainer {
     width: 100%;
     max-height: 250px;
     overflow-y: auto;
@@ -55,9 +49,7 @@
     border: 1px solid #ddd;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
-
-/* Стиль для каждого найденного сообщения */
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage {
+            .foundMessagesContentContainer .foundMessageContainer {
     width: 100%;
     display: flex;
     justify-items: flex-start;
@@ -68,17 +60,14 @@
     transition: background-color 0.2s ease-in-out;
     cursor: pointer;
 }
-
-/* Убираем границу у последнего сообщения */
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage:last-child {
+            .foundMessagesContentContainer .foundMessageContainer:last-child {
     border-bottom: none;
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageSender {
+                .foundMessageContainer .foundMessageSender {
     width: 50px !important; /* Размер круга */
     height: 50px;
     border-radius: 50%; /* Делаем круг */
-    background-color: #007bff; /* Цвет фона (можно изменить) */
+    background-color: var(--color-blue); /* Цвет фона (можно изменить) */
     color: white; /* Цвет текста */
     font-size: 18px;
     font-weight: bold;
@@ -89,38 +78,32 @@
     user-select: none; /* Запрещаем выделение текста */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Добавляем тень */
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent {
+                .foundMessageContainer .foundMessageContentContainer {
     width: 100%;
     display: flex;
     flex: 1 1 0;
     flex-direction: column;
     gap: 1rem;
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .foundMessageHeader {
+                    .foundMessageContentContainer .foundMessageHeaderContainer {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .foundMessageHeader h2 {
+                        .foundMessageHeaderContainer h2 {
     font-weight: 700;
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .foundMessageHeader .foundMessageDate {
+                        .foundMessageHeaderContainer .foundMessageDate {
     color: rgb(150, 150, 150);
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .message {
+                    .foundMessageContentContainer .foundMessageData {
     color: rgb(150, 150, 150);
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
 }
-
-.messageSearch > .foundMessages > .foundMessagesContent .foundMessage > .foundMessageContent > .message > img {
+                        .foundMessageData img {
     max-width: 2rem;
     max-height: 2rem;
     border-radius: 0.2rem;

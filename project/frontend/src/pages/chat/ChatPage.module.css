@@ -1,0 +1,148 @@
+.channelsContainer {
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--color-gray-medium);
+}
+    .channelsContainer .flashTalkLogoContainer {
+        font-size: 1.5rem;
+        text-align: center;
+        padding: 2rem;
+        border-bottom: 1px solid var(--color-gray-light);
+        color: black;
+        text-transform: uppercase;
+        letter-spacing: 0.1rem;
+        cursor: pointer;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        width: 100%;
+        justify-content: center;
+    }
+    .channelsContainer .channelsContentContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        height: 100%;
+        overflow-y: scroll;
+        list-style: none;
+        padding: 1rem;
+    }
+        .channelsContentContainer .channelContainer {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+        .channelsContentContainer .channelContainer.active {
+            background: var(--color-gray-light);
+        }
+        .channelsContentContainer .channelContainer:hover {
+            cursor: pointer;
+            background: var(--color-gray-light);
+        }
+            .channelContainer .channelIcon {
+                width: 3rem;
+                height: 3rem;
+                border-radius: 50%;
+                background-color: var(--color-blue-light);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: var(--color-blue-dark);
+            }
+            .channelContainer .channelPreviewInfoContainer {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                gap: 0.5rem;
+            }
+                .channelPreviewInfoContainer .channelName {
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                }
+                .channelPreviewInfoContainer .channelLastMessage {
+                display: -webkit-box;
+                -webkit-line-clamp: 1; /* ограничение на 3 строки */
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                font-size: 1rem;
+                color: var(--color-text-muted);
+            }
+            .channelContainer .channelLastMessageContainer {
+                display: flex;
+                align-items: end;
+                gap: 0.5rem;
+                flex-direction: column
+            }
+                .channelLastMessageContainer .lastMessageDate {
+                    font-size: 1rem;
+                    color: var(--color-text-muted);
+                }
+                .channelLastMessageContainer .newMessagesIndicator {
+                    margin-top: 0.5rem;
+                    width: 0.5rem;
+                    height:0.5rem;
+                    background-color: var(--color-error);
+                    border-radius: 50%;
+                }
+    .channelsContainer .buttonsContainer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 2rem;
+    }
+        .buttonsContainer .createChannelButton {
+            margin: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--color-blue);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            flex: 1
+        }
+        .buttonsContainer .loggoutButton {
+            margin: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: red;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            flex: 1
+        }
+.channelContainer {
+    flex: 1;
+    width: 100%;
+}
+    .channelContainer .welcomeViewContainer {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+    }
+        .welcomeViewContainer .welcomeViewHeader {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--color-blue-dark);
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px var(--color-gray-medium);
+        }
+        .welcomeViewContainer .welcomeViewMessage {
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--color-text-muted);
+            margin-bottom: 2rem;
+        }

@@ -2,9 +2,43 @@
    v2.0 | 20110126
    License: none (public domain)
 */
+:root {
+    --color-blue-light: #ebf8ff;
+    --color-blue: #3182ce;
+    --color-blue-dark: #2b6cb0;
+    --color-error: #e53e3e;
+    --color-gray-light: #f0f0f0;
+    --color-gray-medium: #cbd5e0;
+    --color-text-dark: #2d3748;
+    --color-text-muted: #4a5568;
+    --color-bg-input: #ebf8ff;
+    --color-bg-input-focus: #e6f0fa;
+    --color-error-bg: #fff5f5;
+}
+
 * {
     box-sizing: border-box!important;
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: var(--color-gray-medium) var(--color-gray-light); /* For Firefox */
 }
+
+*::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+    height: 8px; /* Height of the scrollbar */
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--color-gray-light); /* Track color */
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--color-gray-medium); /* Thumb color */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--color-blue); /* Thumb color on hover */
+}
+
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -36,6 +70,8 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
     line-height: 1;
+    padding: 2rem;
+    background: linear-gradient(135deg, #cce5ff 0%, #f2f9ff 100%);
 }
 ol, ul {
     list-style: none;
@@ -46,9 +82,33 @@ blockquote, q {
 blockquote:before, blockquote:after,
 q:before, q:after {
     content: '';
-    content: none;
 }
 table {
     border-collapse: collapse;
     border-spacing: 0;
+}
+
+.wrapper {
+    height: calc(100vh - 4rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.flash-talk-container {
+    width: 100%;
+    height: calc(100vh - 4rem);
+    display: flex;
+    border: 1px solid var(--color-gray-medium);
+    border-radius: 0.5rem;
+    background: white
+}
+
+.toast-error {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }

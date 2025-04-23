@@ -1,0 +1,134 @@
+.modalWindowContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000;
+}
+.modalWindowContainer.open {
+    opacity: 1;
+    visibility: visible;
+}
+    .modalWindowContainer .modalWindowContent {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 500px;
+    }
+        .modalWindowContent h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--color-blue-dark);
+    }
+        .modalWindowContent label {
+            margin-bottom: 1rem;
+        }
+        .modalWindowContent input {
+            width: 100%;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--color-blue);
+            background: var(--color-blue-light);
+            color: var(--color-text-dark);
+            font-size: 1rem;
+        }
+        .modalWindowContent textarea {
+            width: 100%;
+            height: 5rem;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--color-blue);
+            background: var(--color-blue-light);
+            color: var(--color-text-dark);
+            font-size: 1rem;
+            resize: none;
+        }
+        .modalWindowContent .modalWindowFoundMembersSearchContainer {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+            .modalWindowFoundMembersSearchContainer input {
+                width: 80%;
+            }
+            .modalWindowFoundMembersSearchContainer button {
+            flex: 1;
+            background: var(--color-blue);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .modalWindowContent .modalWindowFoundMembersContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+            .modalWindowFoundMembersContainer .modalWindowFoundMemberContainer {
+            position: relative;
+        }
+                .modalWindowFoundMemberContainer .modalWindowFoundMemberIcon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: var(--color-blue);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            user-select: unset;
+        }
+                .modalWindowFoundMemberContainer .modalWindowFoundMemberRemove {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1rem;
+            height: 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 50%;
+            background: red;
+            color: white;
+        }
+        .modalWindowContent .buttonsContainer {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+            .buttonsContainer button {
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 0.25rem;
+                font-size: 1rem;
+                font-weight: bold;
+                flex: 1;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+            .buttonsContainer button:first-of-type {
+            background: var(--color-blue);
+            color: white;
+        }
+            .buttonsContainer button:last-of-type {
+            background: var(--color-error);
+            color: white;
+        }
+            .buttonsContainer button:hover {
+            transform: scale(1.05);
+        }

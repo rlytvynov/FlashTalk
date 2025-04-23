@@ -1,8 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import channelsReducer from '@/store/channelsSlice.ts'
-
+import authReducer from '@/store/authSlice.ts'
 const store = configureStore({
     reducer: {
+        authData: authReducer,
         channelsData: channelsReducer,
     }
 })

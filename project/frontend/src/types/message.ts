@@ -19,9 +19,10 @@ export interface Message {
     channelId: string
     /**
      * Sender of the message.
-     * The nickname (unique) of the user who sent the message.
+     * The name and id of the user who sent the message.
      */
-    senderNickname: string;
+    authorId: string;
+    authorName: string;
     /**
      * Time.
      * Time when message was sent.
