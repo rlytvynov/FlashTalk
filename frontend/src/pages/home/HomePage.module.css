@@ -1,0 +1,32 @@
+.logoutButton {
+  background-color: var(--color-blue);
+  color: white;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease;
+  margin-top: 1rem;
+}
+
+.logoutButton:hover {
+  background-color: var(--color-blue-dark);
+}
+
+.logoutButton:active {
+  transform: scale(0.96);
+}
+
+.loginLinkStandalone {
+  color: var(--color-blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.loginLinkStandalone:hover {
+  color: var(--color-blue-dark);
+  text-decoration: underline;
+}

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {channels} from "../temp_data/channel";
+import pool from "@config/databaseConfig";
 
 export const getChannels = async (req: Request, res: Response): Promise<any> => {
     try {
