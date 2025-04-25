@@ -1,9 +1,9 @@
 import {User} from "./user";
 
 export interface Message {
-    channelId: string
-    authorName: string;
-    authorId: string;
+    channelid: string
+    authorname: string;
+    authorid: string;
     date: string;
     data: string;
 }

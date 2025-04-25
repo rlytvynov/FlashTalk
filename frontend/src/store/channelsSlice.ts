@@ -26,14 +26,38 @@ export const fetchChannels = createAsyncThunk<
     "fetchChannels/fetch",
     async (_, {rejectWithValue}) => {
         try {
+            console.log("Fetching channels...");
             const response = await fetchDataAuth<{data: Channel[]}>(
                 `${import.meta.env.VITE_API_URL}/channels`
             );
+            console.log(response.data)
             return response.data.map(channel => ({
                 ...channel,
-                messages: channel.messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+                members: channel.members.map(member => ({...member, online: false})),
                 searchedMessages: { data: [], hasMore: false }
             }));
+        } catch (error) {
+            return rejectWithValue((error as Error).message);
+        }
+    }
+);
+
+export const fetchCreateChannel = createAsyncThunk<
+    Channel,
+    { name: string, description: string },
+    { rejectValue: string }
+>(
+    "fetchCreateChannel/fetch",
+    async ({name, description}, {rejectWithValue}) => {
+        try {
+            const response = await fetchDataAuth<{data: Channel}>(
+                `${import.meta.env.VITE_API_URL}/channels`,
+                {
+                    method: "POST",
+                    body: JSON.stringify({ name, description })
+                }
+            );
+            return response.data
         } catch (error) {
             return rejectWithValue((error as Error).message);
         }
@@ -48,12 +72,12 @@ export const fetchSearchedMessages = createAsyncThunk<
     "searchedMessages/fetch",
     async ({ channelId, query, offset, limit }, {rejectWithValue}) => {
         try {
-            const response = await fetchDataAuth<{data: Message[]}>(
+            const response = await fetchDataAuth<{data: {messages: Message[], hasMore: boolean}}>(
                 `${import.meta.env.VITE_API_URL}/channels/${channelId}/search?query=${query}&offset=${offset}&limit=${limit}`
             );
             return {
-                messages: response.data,
-                hasMore: response.data.length === limit
+                messages: response.data.messages,
+                hasMore: response.data.hasMore
             };
         } catch (error) {
             return rejectWithValue((error as Error).message);
@@ -100,6 +124,22 @@ const channelsSlice = createSlice({
                 state.loading = false;
                 state.error = {
                     type: "channels/getChannels",
+                    message: action.payload || "Something went wrong"
+                }
+            })
+            .addCase(fetchCreateChannel.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchCreateChannel.fulfilled, (state, action) => {
+                state.channels.push(action.payload);
+                state.error = null
+                state.loading = false;
+            })
+            .addCase(fetchCreateChannel.rejected, (state, action) => {
+                state.loading = false;
+                state.error = {
+                    type: "channels/createChannel",
                     message: action.payload || "Something went wrong"
                 }
             })

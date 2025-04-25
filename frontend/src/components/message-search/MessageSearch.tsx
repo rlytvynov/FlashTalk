@@ -97,20 +97,15 @@ function MessageSearch() {
                         {searchedMessages.data.map((msg, index) => (
                             <li key={index} className={styles.foundMessageContainer}>
                                 <div className={styles.foundMessageSender}>
-                                    {msg.authorName.slice(0, 2)}
+                                    {msg.authorname.slice(0, 2)}
                                 </div>
                                 <div className={styles.foundMessageContentContainer}>
                                     <div className={styles.foundMessageHeaderContainer}>
-                                        <h2>{msg.authorName}</h2>
-                                        <span className={styles.foundMessageDate}>{ formatTimestamp(new Date(msg.date))}</span>
+                                        <h2>{msg.authorname}</h2>
+                                        <span
+                                            className={styles.foundMessageDate}>{formatTimestamp(new Date(msg.date))}</span>
                                     </div>
-                                    {typeof msg.data === "string" ? (
-                                        <div className={styles.foundMessageData}>{msg.data}</div>
-                                    ) : (
-                                        <div className={styles.foundMessageData}>
-                                            <img src={msg.data.url} alt={msg.data.altText || "Image"} />
-                                        </div>
-                                    )}
+                                    <div className={styles.foundMessageData}>{msg.data}</div>
                                 </div>
                             </li>
                         ))}

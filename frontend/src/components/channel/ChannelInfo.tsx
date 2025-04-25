@@ -12,13 +12,14 @@ interface Props {
 
 function ChannelInfo({isInfoVisible}: Props) {
     const {activeChannelId, channels} = useSelector((state: RootState) => state.channelsData);
+    const {user} = useSelector((state: RootState) => state.authData);
     const [redactedMode, setRedactedMode] = useState({
         description: false,
         members: false,
     });
     const [descriptionDraft, setDescriptionDraft] = useState("");
     const [searchedUserId, setSearchedUserId] = useState("");
-    const [foundUsers, setFoundUsers] = useState<Pick<User,  "username" | "displayName" | "id">[]>([]);
+    const [foundUsers, setFoundUsers] = useState<Pick<User,  "username" | "displayname" | "id">[]>([]);
 
     useEffect(() => {
         if (redactedMode.description) {
@@ -46,7 +47,7 @@ function ChannelInfo({isInfoVisible}: Props) {
                 {
                     id: String(Math.random() * 1000),
                     username: "lpulova",
-                    displayName: "Ludmila Pulova"
+                    displayname: "Ludmila Pulova"
                 }
             ]);
         } catch (error) {
@@ -58,12 +59,14 @@ function ChannelInfo({isInfoVisible}: Props) {
         <div className={`${styles.channelInfoContainer} ${isInfoVisible ? styles.channelInfoContainerActive : ""}`}>
             <div className={styles.channelInfoDescriptionTitleContainer}>
                 <h3 className={styles.channelInfoDescriptionTitle}>Channel description</h3>
-                <button
-                    className={styles.channelInfoDescriptionButton}
-                    onClick={() => setRedactedMode((prev) => ({...prev, description: !prev.description}))}
-                >
-                    {redactedMode.description ? <FaTimes/> : <FaPencil/>}
-                </button>
+                {   channels.find(channel => channel.id === activeChannelId)?.adminid === user?.id &&
+                    <button
+                        className={styles.channelInfoDescriptionButton}
+                        onClick={() => setRedactedMode((prev) => ({...prev, description: !prev.description}))}
+                    >
+                        {redactedMode.description ? <FaTimes/> : <FaPencil/>}
+                    </button>
+                }
             </div>
             <div className={styles.channelInfoDescriptionContentContainer}>
                 {redactedMode.description ?
@@ -82,16 +85,18 @@ function ChannelInfo({isInfoVisible}: Props) {
             </div>
             <div className={styles.channelInfoMembersTitleContainer}>
                 <h3 className={styles.channelInfoMembersTitle}>Channel members</h3>
-                <button
-                    className={styles.channelInfoMembersButton}
-                    onClick={() => setRedactedMode(
-                        (prev) => ({
-                            ...prev, members: !prev.members
-                        }))
+                {   channels.find(channel => channel.id === activeChannelId)?.adminid === user?.id &&
+                    <button
+                        className={styles.channelInfoMembersButton}
+                        onClick={() => setRedactedMode(
+                            (prev) => ({
+                                ...prev, members: !prev.members
+                            }))
+                        }
+                    >
+                        {redactedMode.members ? <FaTimes/> : <FaPlus/>}
+                    </button>
                     }
-                >
-                    {redactedMode.members ? <FaTimes/> : <FaPlus/>}
-                </button>
             </div>
             <div className={styles.channelInfoMembersContentContainer}>
                 {redactedMode.members ?
@@ -114,7 +119,7 @@ function ChannelInfo({isInfoVisible}: Props) {
                                         foundUsers.map((user) => (
                                             <li key={user.id} className={styles.channelInfoFoundMemberContainer}>
                                             <span
-                                                className={styles.channelInfoFoundMemberIcon}>{String(user.displayName).slice(0, 3).toUpperCase()}</span>
+                                                className={styles.channelInfoFoundMemberIcon}>{String(user.displayname).slice(0, 3).toUpperCase()}</span>
                                                 <span className={styles.channelInfoFoundMemberRemove}
                                                       onClick={() => handleRemoveFoundUser(user.id)}><FaTimes/></span>
                                             </li>
@@ -132,7 +137,7 @@ function ChannelInfo({isInfoVisible}: Props) {
                                 <li key={member.username} className={styles.channelInfoMemberContainer}>
                                     <div className={styles.channelInfoMemberIconContainer}>
                                         <span
-                                            className={styles.channelInfoMemberIcon}>{String(member.displayName).slice(0, 3).toUpperCase()}</span>
+                                            className={styles.channelInfoMemberIcon}>{String(member.displayname).slice(0, 3).toUpperCase()}</span>
                                         <span className={styles.channelInfoMemberInfoOnlineIndicator}></span>
                                     </div>
                                     <span className={styles.channelInfoMemberName}>{member.username}</span>

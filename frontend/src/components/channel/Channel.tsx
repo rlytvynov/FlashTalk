@@ -21,17 +21,21 @@ function Channel() {
         <div className={styles.channelContainer}>
             <div className={styles.channelHeaderContainer}>
                 <div className={styles.channelPortfolioContainer}>
-                    <h1 className={styles.channelIcon}>{activeChannelId.slice(0, 3).toUpperCase()}</h1>
+                    <h1 className={styles.channelIcon}>{channels.find(channel => channel.id === activeChannelId)?.name.slice(0, 3).toUpperCase()}</h1>
                     <div className={styles.channelShortInfoContainer}>
-                        <h2 className={styles.channelName}>{activeChannelId}</h2>
+                        <h2 className={styles.channelName}>{channels.find(channel => channel.id === activeChannelId)?.name}</h2>
                         <p className={styles.channelMembersOnline}>42 members online</p>
                     </div>
                     <div className={styles.channelMessageSearchContainer}>
                         <MessageSearch/>
                     </div>
                     <div className={styles.channelInfoContainer}>
-                        {!isInfoVisible && <button className={styles.channelInfoButton} onClick={toggleInfoShow}><FaInfo/></button>}
-                        {isInfoVisible && <button className={styles.channelInfoButton} onClick={toggleInfoShow}><FaTimes/></button>}
+                        {!isInfoVisible &&
+                            <button className={styles.channelInfoButton} onClick={toggleInfoShow}><FaInfo/>
+                            </button>}
+                        {isInfoVisible &&
+                            <button className={styles.channelInfoButton} onClick={toggleInfoShow}><FaTimes/>
+                            </button>}
                         <ChannelInfo isInfoVisible={isInfoVisible}/>
                     </div>
                 </div>
@@ -40,18 +44,18 @@ function Channel() {
                 {
                     channels.find(channel => channel.id === activeChannelId)?.messages.map((message) => (
                         <li key={message.date} className={`${styles.channelMessageContainer}`}>
-                            {message.authorId === user?.id ?
+                            {message.authorid === user?.id ?
                                 <div className={`${styles.messageContentContainer} ${styles.myMessage}`}>
                                     <span className={styles.messageData}>{message.data as string}</span>
                                     <div className={styles.messageTime}>{formatTimestamp(new Date(message.date))}</div>
                                 </div> :
                                 <>
                                     <div className={styles.messageSenderIconContainer}>
-                                        <span className={styles.messageSenderIcon}>{String(message.authorName).slice(0, 3).toUpperCase()}</span>
+                                        <span className={styles.messageSenderIcon}>{String(message.authorname).slice(0, 3).toUpperCase()}</span>
                                         <span className={styles.messageSenderOnlineIndicator}></span>
                                     </div>
                                     <div className={styles.messageContentContainer}>
-                                        <div className={styles.messageSender}>{message.authorName}</div>
+                                        <div className={styles.messageSender}>{message.authorname}</div>
                                         <span className={styles.messageData}>{message.data as string}</span>
                                         <div className={styles.messageTime}>{formatTimestamp(new Date(message.date))}</div>
                                     </div>

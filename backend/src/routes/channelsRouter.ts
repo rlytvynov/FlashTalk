@@ -6,7 +6,7 @@ const channelsRouter = express.Router();
 channelsRouter.use(authMiddleware)
 
 channelsRouter.get("/", channelsController.getChannels);
-channelsRouter.get("/:id", channelsController.getChannelInfo);
+channelsRouter.post("/", channelsController.createChannel);
 channelsRouter.get("/:id/search", channelsController.getSearchedMessages);
 
 export default channelsRouter;

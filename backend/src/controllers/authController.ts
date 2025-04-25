@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {isValidEmail} from "../utils/emailValidation";
-import {users} from "../temp_data/users";
 import {JWT_SECRET} from "@config/envConfig";
+import pool from "@config/databaseConfig";
 
 /**
  * Регистрация на потребител
@@ -12,7 +12,6 @@ import {JWT_SECRET} from "@config/envConfig";
  * - Хешира паролата
  * - Записва потребителя във "фалшивата база" (users.json)
  */
-
 export const handleRegister = async (req: Request, res: Response): Promise<any> => {
     try {
         const { username, email, password, displayName } = req.body;
@@ -22,18 +21,19 @@ export const handleRegister = async (req: Request, res: Response): Promise<any> 
         if (!isValidEmail(email)) {
             return res.status(400).sendJson({}, "Invalid email format.");
         }
-        const emailExists = users.some(u => u.email === email);
-        if (emailExists) {
-            return res.status(409).sendJson({}, "Email already in use.");
+        const existedUsers = await pool.query("SELECT * FROM users WHERE email = $1 OR username = $2", [email, username]);
+        if (existedUsers.rows.length > 0) {
+            return res.status(409).sendJson({}, "Email or Username already in use.");
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        users.push({ id: "1", username, email, password: hashedPassword, displayName });
-        return res.status(201).sendJson({user: { username, displayName, email }}, "User registered successfully")
+        const {rows} = await pool.query("SELECT * FROM create_user($1, $2, $3, $4)", [
+            username, email, hashedPassword, displayName
+        ])
+        return res.status(201).sendJson({}, "User registered successfully")
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message)
     }
 }
-
 export const handleLogin = async (req: Request, res: Response): Promise<any> => {
     try {
         const { email, password } = req.body;
@@ -43,21 +43,22 @@ export const handleLogin = async (req: Request, res: Response): Promise<any> => 
         if (!isValidEmail(email)) {
             return res.status(400).sendJson({}, "Invalid email format.");
         }
-        const user = users.find(u => u.email === email);
-        if (!user) {
+        const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (rows.length === 0) {
             return res.status(401).sendJson({}, "Invalid email or password.");
         }
-        const isMatch = await bcrypt.compare(password, user.password);
+        const foundUser = rows[0];
+        const isMatch = await bcrypt.compare(password, foundUser.password);
         if (!isMatch) {
             return res.status(401).sendJson({}, "Invalid email or password.");
         }
 
         const token = jwt.sign(
             {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                displayName: user.displayName
+                id: foundUser.id,
+                email: foundUser.email,
+                username: foundUser.username,
+                displayName: foundUser.displayname
             },
             JWT_SECRET,
             { expiresIn: "7d" }
@@ -65,17 +66,16 @@ export const handleLogin = async (req: Request, res: Response): Promise<any> => 
         return res.status(200).sendJson({
             token,
             user: {
-                id: user.id,
-                username: user.username,
-                displayName: user.displayName,
-                email: user.email
+                id: foundUser.id,
+                username: foundUser.username,
+                displayName: foundUser.displayname,
+                email: foundUser.email
             }
         }, "LoginPage successful");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message)
     }
 }
-
 export const handleMe = async (req: Request, res: Response): Promise<any> => {
     try {
         return res.sendJson(req.user, "Authenticated user data");

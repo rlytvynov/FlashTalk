@@ -1,23 +1,39 @@
 import { Request, Response } from "express";
-import {channels} from "../temp_data/channel";
 import pool from "@config/databaseConfig";
 
 export const getChannels = async (req: Request, res: Response): Promise<any> => {
     try {
-        return res.status(200).sendJson(channels, "User retrieved successfully");
+        const {rows} = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [req.user.id]);
+        console.log(rows)
+        return res.status(200).sendJson(rows, "Channels retrieved successfully");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message);
     }
 }
 
-export const getChannelInfo = async (req: Request, res: Response): Promise<any> => {
+export const createChannel = async (req: Request, res: Response): Promise<any> => {
     try {
-        const channelId = req.params.id as string || "0x234";
-        const channel = channels.find(channel => channel.id === channelId);
-        if(!channel) {
-            return res.status(404).sendJson({}, "Channel not found");
+        const { name, description } = req.body;
+        const { rows } = await pool.query("SELECT * FROM create_channel($1, $2, $3)", [name, description, req.user.id])
+        const channel = rows[0]
+        return res.status(200).sendJson(channel, "Channel created successfully");
+    } catch (error) {
+        return res.status(500).sendJson({}, (error as Error).message);
+    }
+}
+
+export const addChannelMember = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { channelId, userId } = req.body;
+        if (!channelId || !userId) {
+            return res.status(400).sendJson({}, "Channel ID and User ID are required.");
         }
-        return res.status(200).sendJson(channel, "User retrieved successfully");
+        const isAdminRights = await pool.query("SELECT * FROM channels WHERE id=$1 AND adminId=$2", [channelId, req.user.id]);
+        if (isAdminRights.rowCount === 0) {
+            return res.status(403).sendJson({}, "You don't have permission to add members to this channel.");
+        }
+        const { rows } = await pool.query("SELECT * FROM add_user_to_channel($1, $2)", [userId, channelId])
+        return res.status(200).sendJson(rows[0], "Channel member added successfully");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message);
     }
@@ -29,18 +45,8 @@ export const getSearchedMessages = async (req: Request, res: Response): Promise<
         const query = (req.query.query as string || "").toLowerCase();
         const offset = parseInt(req.query.offset as string) || 0;
         const limit = parseInt(req.query.limit as string) || 10;
-
-        const channel = channels.find(channel => channel.id === channelId);
-        if(!channel) {
-            return res.status(404).sendJson({}, "Channel not found");
-        }
-
-        const filtered = channel.messages.filter((msg) => {
-            return msg.data.toLowerCase().includes(query);
-        }) || [];
-
-        const paginated = filtered.slice(offset, offset + limit);
-        return res.status(200).sendJson(paginated, "User retrieved successfully");
+        const { rows } = await pool.query("SELECT * FROM get_searched_channel_messages($1, $2, $3, $4)", [channelId, query, limit, offset]);
+        return res.status(200).sendJson({messages: rows, hasMore: rows[0].total_count === rows.length}, "Messages retrieved successfully");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message);
     }
