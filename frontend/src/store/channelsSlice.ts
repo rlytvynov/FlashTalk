@@ -26,11 +26,9 @@ export const fetchChannels = createAsyncThunk<
     "fetchChannels/fetch",
     async (_, {rejectWithValue}) => {
         try {
-            console.log("Fetching channels...");
             const response = await fetchDataAuth<{data: Channel[]}>(
                 `${import.meta.env.VITE_API_URL}/channels`
             );
-            console.log(response.data)
             return response.data.map(channel => ({
                 ...channel,
                 members: channel.members.map(member => ({...member, online: false})),

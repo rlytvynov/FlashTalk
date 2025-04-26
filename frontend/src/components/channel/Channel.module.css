@@ -102,25 +102,25 @@
     user-select: unset;
 }
                 .messageSenderIconContainer .messageSenderOnlineIndicator {
-    position: absolute;
-    top: calc(100% - 0.7rem);
-    right: 0.1rem;
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 50%;
-    background: lawngreen;
-    border: 2px solid white;
-}
+                    position: absolute;
+                    top: calc(100% - 0.7rem);
+                    right: 0.1rem;
+                    width: 0.8rem;
+                    height: 0.8rem;
+                    border-radius: 50%;
+                    background: lawngreen;
+                    border: 2px solid white;
+                }
                 .messageSenderIconContainer .messageSenderOfflineIndicator {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: red;
-    border: 1px solid white;
-}
+                    position: absolute;
+                    top: calc(100% - 0.7rem);
+                    right: 0.1rem;
+                    width: 0.8rem;
+                    height: 0.8rem;
+                    border-radius: 50%;
+                    background: red;
+                    border: 2px solid white;
+                }
             .channelMessageContainer .messageContentContainer {
     padding: 0.5rem;
     max-width: 60%;

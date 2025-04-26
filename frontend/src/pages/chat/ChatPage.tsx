@@ -41,30 +41,33 @@ function ChatPage() {
                 <ul className={styles.channelsContentContainer}>
                     {loading && <div className={styles.loading}>Loading...</div>}
                     {!loading && !error && channels.map((channel) => {
-                        const lastMessage = channel.messages[channel.messages.length - 1];
+                        const lastMessage = channel.messages.length ? channel.messages[channel.messages.length - 1] : null;
 
                         return (
                             <div key={channel.id} className={styles.channelContainerWrapper}>
                                 <li className={`${styles.channelContainer} ${channel.id === activeChannelId && styles.active}`}
                                     onClick={() => store.dispatch(setActiveChannelId(channel.id))} key={channel.id}
                                     data-channel={channel.name}>
-                                    {/* Channel icon */}
-                                    <div className={styles.channelIcon}>{channel.name.slice(0, 3).toUpperCase()}</div>
+                                        {/* Channel icon */}
+                                        <div className={styles.channelIcon}>{channel.name.slice(0, 3).toUpperCase()}</div>
 
-                                    {/* Channel name and last message */}
-                                    <div className={styles.channelPreviewInfoContainer}>
-                                        <div className={styles.channelName}># {channel.name}</div>
-                                        <div className={styles.channelLastMessage}>{lastMessage.data as string}</div>
-                                    </div>
-
-                                    {/* Time and unread messages */}
-                                    <div className={styles.channelLastMessageContainer}>
-                                        <div className={styles.lastMessageDate}>
-                                            {formatTimestamp(new Date(lastMessage.date))}
+                                        {/* Channel name and last message */}
+                                        <div className={styles.channelPreviewInfoContainer}>
+                                            <div className={styles.channelName}># {channel.name}</div>
+                                            {lastMessage ?
+                                                <div className={styles.channelLastMessage}>{lastMessage.data as string}</div>
+                                                :
+                                                <div className={styles.channelLastMessage}>No messages yet...</div>
+                                            }
                                         </div>
-                                        {channel.id !== activeChannelId &&
-                                            <div className={styles.newMessagesIndicator}></div>}
-                                    </div>
+                                            {/* Time and unread messages */}
+                                        <div className={styles.channelLastMessageContainer}>
+                                            <div className={styles.lastMessageDate}>
+                                                {lastMessage && formatTimestamp(new Date(lastMessage.date))}
+                                            </div>
+                                            {/*{channel.id !== activeChannelId &&*/}
+                                            {/*    <div className={styles.newMessagesIndicator}></div>}*/}
+                                        </div>
                                 </li>
                             </div>
                         );

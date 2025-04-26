@@ -25,7 +25,9 @@ CREATE OR REPLACE FUNCTION create_channel(
     id INTEGER,
     name VARCHAR,
     description TEXT,
-    adminId INTEGER
+    adminId INTEGER,
+    members JSON,
+    messages JSON
 )
 AS $$
 DECLARE
@@ -42,7 +44,9 @@ BEGIN
         new_channel.id,
         new_channel.name,
         new_channel.description,
-        new_channel.adminId;
+        new_channel.adminId,
+        '[]'::json,
+        '[]'::json;
 END;
 $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION create_message(
@@ -226,7 +230,7 @@ BEGIN
     WHERE u.id = _userId;
 END;
 $$ LANGUAGE plpgsql;
-
+select * from users;
 select * from get_user_channels_with_members(2);
 select * from messages;
 

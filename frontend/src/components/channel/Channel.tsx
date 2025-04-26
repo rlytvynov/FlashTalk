@@ -11,6 +11,15 @@ function Channel() {
     const {activeChannelId, channels} = useSelector((state: RootState) => state.channelsData);
     const {user} = useSelector((state: RootState) => state.authData);
 
+    const [msg, setMsg] = useState("");
+    const handleSendMsg = async () => {
+        try {
+            //socket.emit("sendMessage") ...
+            setMsg("");
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
+    }
     const [isInfoVisible, setIsInfoVisible] = useState(false);
 
     const toggleInfoShow = () => {
@@ -52,7 +61,11 @@ function Channel() {
                                 <>
                                     <div className={styles.messageSenderIconContainer}>
                                         <span className={styles.messageSenderIcon}>{String(message.authorname).slice(0, 3).toUpperCase()}</span>
-                                        <span className={styles.messageSenderOnlineIndicator}></span>
+                                        <span
+                                            className={`${
+                                                channels.find(channel => channel.id === activeChannelId)?.members
+                                                        .find(member => member.id === message.authorid)?.online || message.authorid === user?.id ?
+                                                        styles.messageSenderOnlineIndicator : styles.messageSenderOfflineIndicator}`}></span>
                                     </div>
                                     <div className={styles.messageContentContainer}>
                                         <div className={styles.messageSender}>{message.authorname}</div>
@@ -66,8 +79,8 @@ function Channel() {
                 }
             </ul>
             <div className={styles.chatInputContainer}>
-                <input type="text" placeholder="Type your message..."/>
-                <button>Send</button>
+                <input value={msg} onChange={(e) => setMsg(e.target.value)} type="text" placeholder="Type your message..."/>
+                <button onClick={handleSendMsg}>Send</button>
             </div>
         </div>
     );

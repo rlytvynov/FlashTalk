@@ -1,7 +1,6 @@
 import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import RegisterPage from "@/pages/registration/RegisterPage.tsx";
 import LoginPage from "@/pages/login/LoginPage.tsx";
-import ChatPage from "@/pages/chat/ChatPage.tsx";
 import HomePage from "@/pages/home/HomePage.tsx";
 import {useEffect} from "react";
 import store, {RootState} from "@/store/store.ts";
@@ -9,6 +8,7 @@ import {fetchTokenValidation} from "@/store/authSlice.ts";
 import {useSelector} from "react-redux";
 import ErrorDisplay from "@/components/error/ErrorDisplay.tsx";
 import {ToastContainer} from "react-toastify";
+import ChatWrapper from "@/pages/chat/ChatWrapper.tsx";
 
 function App() {
     const { user } = useSelector((state: RootState) => state.authData);
@@ -34,7 +34,7 @@ function App() {
                         </>
                     )}
                     {/* Root path logic based on auth status */}
-                    <Route path="/" element={ user ? <ChatPage /> : <HomePage /> } />
+                    <Route path="/" element={ user ? <ChatWrapper /> : <HomePage /> } />
                     {/* Optional: Catch-all redirect for unknown paths */}
                     <Route path="*" element={<Navigate to="/" replace />}/>
                 </Routes>

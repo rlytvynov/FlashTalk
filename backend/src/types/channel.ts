@@ -12,6 +12,6 @@ export interface Channel {
     id: string;
     name: string
     description: string
-    members: Pick<User, "username" | "displayName">[];
+    members: Pick<User, "id" | "username" | "displayName">[];
     messages: Message[];
 }

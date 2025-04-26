@@ -4,7 +4,6 @@ import pool from "@config/databaseConfig";
 export const getChannels = async (req: Request, res: Response): Promise<any> => {
     try {
         const {rows} = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [req.user.id]);
-        console.log(rows)
         return res.status(200).sendJson(rows, "Channels retrieved successfully");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message);
