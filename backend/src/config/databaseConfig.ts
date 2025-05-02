@@ -2,10 +2,10 @@
  * Подключение към БД и export на инстанция - hostname, port и др (DR2)
  */
 import pg from 'pg';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv';  // This import may be unnecessary because we're importing the relevant env variables in the next line. Line 8 is also unnecessary.
 import { DB_HOST, DB_NAME, DB_PORT, DB_USER, DB_PASSWORD } from "@config/envConfig";
 
-dotenv.config();
+dotenv.config();  // Maybe unnecessary (read comment on line 5).
 
 console.log('DB_NAME:', DB_NAME);
 console.log('DB_HOST:', DB_HOST);
