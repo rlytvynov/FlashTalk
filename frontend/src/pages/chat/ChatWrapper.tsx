@@ -6,22 +6,22 @@ function ChatWrapper() {
     useEffect(() => {
         socket.connect();
 
-        function onConnect() {
+        socket.on('connect', () => { /* to do... */ });
+        socket.on('disconnect', () => { /* to do... */ });
 
-            console.log("Connected");
+        socket.on('initial-connection', () => {
+            /* to do... */
+        });
 
-        }
-
-        function onDisconnect() {
-            console.log("Disconnected");
-        }
-
-        socket.on("connect", onConnect);
-        socket.on("disconnect", onDisconnect);
+        socket.on('new-message', () => {
+            /* to do... */
+        });
 
         return () => {
-            socket.off("connect", onConnect);
-            socket.off("disconnect", onDisconnect);
+            // All listeners (socket.on(...)) should be detached like this.
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('initial-connection');
             socket.disconnect();
         };
     }, []);
