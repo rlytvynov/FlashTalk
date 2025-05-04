@@ -1,17 +1,18 @@
-import http from "node:http";
-import express from "express";
-import {Server} from "socket.io";
 import cors from "cors"
-
-import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
-import corsOptions from "@config/corsConfig";
-import { JWT_SECRET } from '@config/envConfig'
+import express from "express";
 import jwt from 'jsonwebtoken'
+import http from "node:http";
+import {Server} from "socket.io";
+
+import corsOptions from "@config/corsConfig";
+import pool from "@config/databaseConfig";
+import { JWT_SECRET } from '@config/envConfig'
+import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
 import responseMiddleware from "@middlewares/responseTypeMiddlware";
 import authRouter from "@routes/authRouter";
-import usersRouter from "@routes/usersRouter";
 import channelsRouter from "@routes/channelsRouter";
-import pool from "@config/databaseConfig";
+import usersRouter from "@routes/usersRouter";
+import { Message } from './types/channel';
 
 declare global {
     namespace Express {
@@ -57,7 +58,7 @@ io.use((socket, next) => {
 
 io.on("connection", async (socket) => {
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
-    const user = jwt.verify(token, JWT_SECRET) as { id: string, username: string };  // Get the userId.
+    const user = jwt.verify(token, JWT_SECRET) as { id: string, username: string, displayName: string };  // Decrypt user info.
     console.log(`[server]: User connected. Username: "${user.username}" | id: ${user.id}`);
 
     userSessions.set(socket.id, user.id);
@@ -73,10 +74,14 @@ io.on("connection", async (socket) => {
     // NOT FINISHED!!! Must add more stuff like other user online statuses.
     io.to(socket.id).emit('initial-connection', channelsOfUser.rows);
 
-    // Listen for new messages from users.
+    // Listen for new message from user; write it to the DB; send it to other users.
     socket.on('new-message', async (channelId, authorId, messageData) => {
         const messages = await pool.query("SELECT * FROM create_message($1, $2, $3)", [parseInt(channelId), parseInt(authorId), messageData]);
-        socket.broadcast.to(channelId).emit('new-message', (messages.rows[0]));
+        const message: Message & { authorname: string } = messages.rows[0];
+        message.authorname = user.displayName;  // The frontend wants the 'displayName' so add it to the message.
+        socket.broadcast.to(channelId).emit('new-message', message);
+        
+        io.to(socket.id).emit('new-message', message);  // tmp | Sent to the sender for debugging.
     });
 
     socket.on("disconnect", () => {

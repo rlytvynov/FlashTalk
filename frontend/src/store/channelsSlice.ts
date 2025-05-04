@@ -106,6 +106,15 @@ const channelsSlice = createSlice({
         clearChannelError (state) {
             state.error = null;
         },
+        // This reducer may be wrong!!!
+        appendMessageToChannel: (state, action) => {
+            const channel = state.channels.find(channel => channel.id === action.payload.channelid);
+            if (channel) {
+                channel.messages = channel.messages || [];
+                channel.messages.push(action.payload);
+            }
+        },
+          
     },
     extraReducers: (builder) => {
         builder
@@ -170,5 +179,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const {setActiveChannelId, utilizeSearchedMessages, clearChannelError} = channelsSlice.actions;
+export const { setActiveChannelId, utilizeSearchedMessages, clearChannelError, appendMessageToChannel } = channelsSlice.actions;
 export default channelsSlice.reducer;
