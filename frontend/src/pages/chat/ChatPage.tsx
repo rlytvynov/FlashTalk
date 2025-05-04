@@ -55,7 +55,7 @@ function ChatPage() {
                                         <div className={styles.channelPreviewInfoContainer}>
                                             <div className={styles.channelName}># {channel.name}</div>
                                             {lastMessage ?
-                                                <div className={styles.channelLastMessage}>{lastMessage.data as string}</div>
+                                                <div className={styles.channelLastMessage}>{`${lastMessage.authorname}: ${lastMessage.data as string}`}</div>
                                                 :
                                                 <div className={styles.channelLastMessage}>No messages yet...</div>
                                             }

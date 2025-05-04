@@ -3,13 +3,13 @@ import styles from "./MessageSearch.module.css";
 import store, {RootState} from "@/store/store.ts";
 import {useSelector} from "react-redux";
 import {fetchSearchedMessages, utilizeSearchedMessages} from "@/store/channelsSlice.ts";
-import {FaSearch, FaTimes} from "react-icons/fa";
+import {FaSearch} from "react-icons/fa";
 import {formatTimestamp} from "@/utils/formatTimestamp.ts";
 
-const LIMIT = 10;
+const LIMIT = 1;
 
 function MessageSearch() {
-    const {error, loading, activeChannelId} = useSelector((state: RootState) => state.channelsData);
+    const {loading, activeChannelId} = useSelector((state: RootState) => state.channelsData);
     const searchedMessages = useSelector((state: RootState) =>
         state.channelsData.channels.find(channel => channel.id === activeChannelId)?.searchedMessages || {data: [], hasMore: false}
     );
@@ -19,21 +19,21 @@ function MessageSearch() {
     const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
 
     const handleSearch = async () => {
-        const query = inputRef.current?.value.toLowerCase().trim() || "";
+        const query = inputRef.current?.value.trim() || "";
         if(!query) {
             store.dispatch(utilizeSearchedMessages(activeChannelId));
             return;
         }
-
         try {
-            await store.dispatch(fetchSearchedMessages({channelId: activeChannelId, query: query.toLowerCase(), offset: 0, limit: LIMIT})).unwrap()
+            console.log({channelId: activeChannelId, query, offset: 0, limit: LIMIT})
+            await store.dispatch(fetchSearchedMessages({channelId: activeChannelId, query, offset: 0, limit: LIMIT})).unwrap()
         } catch (error) {
             console.error("Error fetching messages:", error);
         }
     };
 
     const handleUploadMore = async (limit: number) => {
-        const query = inputRef.current?.value.trim().toLowerCase() || "";
+        const query = inputRef.current?.value.trim() || "";
         try {
             await store.dispatch(fetchSearchedMessages({
                 channelId: activeChannelId,
@@ -50,6 +50,10 @@ function MessageSearch() {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
                 setIsInputFocused(false);
+                store.dispatch(utilizeSearchedMessages(activeChannelId));
+                if(inputRef.current) {
+                    inputRef.current.value = "";
+                }
             }
         };
 
@@ -67,17 +71,42 @@ function MessageSearch() {
                 ref={inputRef}
                 onFocus={() => setIsInputFocused(true)}
                 style={{
+                    zIndex: '100',
                     borderBottomLeftRadius: isInputFocused && searchedMessages.data.length ? "0px" : "8px",
                     borderBottomRightRadius: isInputFocused && searchedMessages.data.length ? "0px" : "8px"
                 }}
             />
-            {!searchedMessages.data.length && <FaSearch onClick={handleSearch} style={{position: 'absolute', right: '1rem', top: '32%', cursor: 'pointer'}}/>}
-            {searchedMessages.data.length > 0 &&
-                <FaTimes onClick={() => {store.dispatch(utilizeSearchedMessages(activeChannelId)); inputRef.current!.value = "";}}
-                         style={{position: 'absolute', right: '1rem', top: '32%', cursor: 'pointer'}}
-                />}
-            {loading && <div className={styles.loading}>Loading...</div>}
-            {error && error.type === "channels/getMessages" && <div className={styles.error}>{error.message}</div>}
+            <FaSearch onClick={handleSearch} style={{position: 'absolute', right: '1rem', top: '32%', cursor: 'pointer'}}/>
+            {loading && <div style={
+                {
+                    position: 'absolute',
+                    top: '80%',
+                    zIndex: '1',
+                    left: '0',
+                    padding: '1rem',
+                    backgroundColor: '#fff',
+                    width: '100%',
+                    border: '1px solid #ccc',
+                }
+            }>
+                Loading...
+            </div>}
+            {isInputFocused && searchedMessages.data.length === 0 && inputRef.current?.value !== '' && (
+                <div style={
+                    {
+                        position: 'absolute',
+                        top: '80%',
+                        zIndex: '1',
+                        left: '0',
+                        padding: '1rem',
+                        backgroundColor: '#fff',
+                        width: '100%',
+                        border: '1px solid #ccc',
+                    }
+                }>
+                    <span>No messages found</span>
+                </div>
+            )}
             {isInputFocused && searchedMessages.data.length > 0 && (
                 <div className={styles.foundMessagesContainer}>
                     <div className={styles.foundMessagesAmountContainer}>

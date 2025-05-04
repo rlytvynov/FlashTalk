@@ -10,6 +10,7 @@ import ChannelInfo from "@/components/channel/ChannelInfo.tsx";
 function Channel() {
     const {activeChannelId, channels} = useSelector((state: RootState) => state.channelsData);
     const {user} = useSelector((state: RootState) => state.authData);
+    const [isInfoVisible, setIsInfoVisible] = useState(false);
 
     const [msg, setMsg] = useState("");
     const handleSendMsg = async () => {
@@ -20,7 +21,8 @@ function Channel() {
             console.error("Error sending message:", error);
         }
     }
-    const [isInfoVisible, setIsInfoVisible] = useState(false);
+
+
 
     const toggleInfoShow = () => {
         setIsInfoVisible(!isInfoVisible)
@@ -33,7 +35,7 @@ function Channel() {
                     <h1 className={styles.channelIcon}>{channels.find(channel => channel.id === activeChannelId)?.name.slice(0, 3).toUpperCase()}</h1>
                     <div className={styles.channelShortInfoContainer}>
                         <h2 className={styles.channelName}>{channels.find(channel => channel.id === activeChannelId)?.name}</h2>
-                        <p className={styles.channelMembersOnline}>42 members online</p>
+                        <p className={styles.channelMembersOnline}>{channels.find(channel => channel.id === activeChannelId)?.members.length} members</p>
                     </div>
                     <div className={styles.channelMessageSearchContainer}>
                         <MessageSearch/>
@@ -49,10 +51,16 @@ function Channel() {
                     </div>
                 </div>
             </div>
-            <ul className={styles.channelMessagesContainer}>
+            <ul
+                ref={(el) => {
+                    if (el) {
+                        el.scrollTop = el.scrollHeight;
+                    }
+                }}
+                className={styles.channelMessagesContainer}>
                 {
                     channels.find(channel => channel.id === activeChannelId)?.messages.map((message) => (
-                        <li key={message.date} className={`${styles.channelMessageContainer}`}>
+                        <li key={message.id} className={`${styles.channelMessageContainer}`}>
                             {message.authorid === user?.id ?
                                 <div className={`${styles.messageContentContainer} ${styles.myMessage}`}>
                                     <span className={styles.messageData}>{message.data as string}</span>

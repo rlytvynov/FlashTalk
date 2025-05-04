@@ -102,12 +102,10 @@ BEGIN
             users u ON m.authorId = u.id
         WHERE
             m.channelId = _channel_id
-            AND (
-                _search_query IS NULL
-                OR m.data ILIKE '%' || _search_query || '%'
-            )
+            AND
+            m.data ILIKE '%' || _search_query || '%'
         ORDER BY
-            m.date DESC
+            m.id ASC
         LIMIT
             _limit
         OFFSET
@@ -151,7 +149,7 @@ BEGIN
                     'authorid', u.id,
                     'authorname', u.displayname
                 )
-                ORDER BY m.date DESC
+                ORDER BY m.id ASC
             ) AS recent_messages
         FROM (
             SELECT
@@ -197,70 +195,35 @@ CREATE OR REPLACE FUNCTION add_user_to_channel(
     _channelId INTEGER
 ) RETURNS TABLE (
     id INTEGER,
-    username VARCHAR,
-    displayName VARCHAR
+    userId INTEGER,
+    channelId INTEGER
 ) AS $$
 DECLARE
     user_exists BOOLEAN;
     channel_exists BOOLEAN;
     already_member BOOLEAN;
 BEGIN
-    SELECT EXISTS(SELECT 1 FROM users WHERE id = _userId) INTO user_exists;
+    SELECT EXISTS(SELECT 1 FROM users u WHERE u.id = _userId) INTO user_exists;
     IF NOT user_exists THEN
         RAISE EXCEPTION 'User with ID % does not exist', _userId;
     END IF;
 
-    SELECT EXISTS(SELECT 1 FROM channels WHERE id = _channelId) INTO channel_exists;
+    SELECT EXISTS(SELECT 1 FROM channels c WHERE c.id = _channelId) INTO channel_exists;
     IF NOT channel_exists THEN
         RAISE EXCEPTION 'Channel with ID % does not exist', _channelId;
     END IF;
 
-    SELECT EXISTS(SELECT 1 FROM users_to_channel
-                 WHERE userId = _userId AND channelId = _channelId) INTO already_member;
+    SELECT EXISTS(SELECT 1 FROM users_to_channel uc
+                 WHERE uc.userId = _userId AND uc.channelId = _channelId) INTO already_member;
     IF already_member THEN
         RAISE NOTICE 'User % is already a member of channel %', _userId, _channelId;
-    ELSE
-        INSERT INTO users_to_channel (userId, channelId)
-        VALUES (_userId, _channelId);
     END IF;
 
     RETURN QUERY
-    SELECT u.id, u.username, u.displayName
-    FROM users u
-    WHERE u.id = _userId;
+    INSERT INTO users_to_channel (userId, channelId)
+    VALUES (_userId, _channelId)
+    RETURNING users_to_channel.id, users_to_channel.userId, users_to_channel.channelId;
 END;
 $$ LANGUAGE plpgsql;
-select * from users;
+
 select * from get_user_channels_with_members(2);
-select * from messages;
-
--- Messages from user 1 in channel 3
-SELECT * FROM create_message(3, 1, 'Hello everyone! Welcome to General channel!');
-SELECT * FROM create_message(3, 1, 'How are you all doing today?');
-SELECT * FROM create_message(3, 1, 'I was thinking we could discuss some important topics here.');
-SELECT * FROM create_message(3, 1, 'Has anyone seen the latest updates?');
-
--- Messages from user 2 in channel 3
-SELECT * FROM create_message(3, 2, 'Hi there! Thanks for creating this channel.');
-SELECT * FROM create_message(3, 2, 'I have a question about the project timeline.');
-SELECT * FROM create_message(3, 2, 'Can we schedule a meeting for next week?');
-SELECT * FROM create_message(3, 2, 'I found an interesting article related to our work.');
-
--- Messages from user 3 in channel 3
-SELECT * FROM create_message(3, 3, 'Good morning team!');
-SELECT * FROM create_message(3, 3, 'I just pushed some new changes to the repository.');
-SELECT * FROM create_message(3, 3, 'Does anyone need help with their tasks?');
-SELECT * FROM create_message(3, 3, 'Remember we have a deadline coming up!');
-
--- Messages from user 4 in channel 3
-SELECT * FROM create_message(3, 4, 'Hey all, just checking in.');
-SELECT * FROM create_message(3, 4, 'I think we should review the design mockups.');
-SELECT * FROM create_message(3, 4, 'The server seems to be running slow today.');
-SELECT * FROM create_message(3, 4, 'I''ll be out of office tomorrow.');
-
--- Messages from user 5 in channel 3
-SELECT * FROM create_message(3, 5, 'Welcome aboard everyone!');
-SELECT * FROM create_message(3, 5, 'I''ve prepared some documentation for the new features.');
-SELECT * FROM create_message(3, 5, 'Let me know if you have any questions.');
-SELECT * FROM create_message(3, 5, 'Great work team, keep it up!');
-

@@ -29,6 +29,7 @@ export const fetchChannels = createAsyncThunk<
             const response = await fetchDataAuth<{data: Channel[]}>(
                 `${import.meta.env.VITE_API_URL}/channels`
             );
+            console.log(response.data)
             return response.data.map(channel => ({
                 ...channel,
                 members: channel.members.map(member => ({...member, online: false})),
@@ -70,8 +71,9 @@ export const fetchSearchedMessages = createAsyncThunk<
     "searchedMessages/fetch",
     async ({ channelId, query, offset, limit }, {rejectWithValue}) => {
         try {
+            const queryToServer = `${import.meta.env.VITE_API_URL}/channels/${channelId}/search?query=${encodeURIComponent(query)}&offset=${offset}&limit=${limit}`
             const response = await fetchDataAuth<{data: {messages: Message[], hasMore: boolean}}>(
-                `${import.meta.env.VITE_API_URL}/channels/${channelId}/search?query=${query}&offset=${offset}&limit=${limit}`
+                queryToServer
             );
             return {
                 messages: response.data.messages,
@@ -96,9 +98,9 @@ const channelsSlice = createSlice({
             activeChannel.searchedMessages.hasMore = false;
         },
         setActiveChannelId: (state, action) => {
-            state.activeChannelId = action.payload;
             const activeChannel = state.channels.find(channel => channel.id === action.payload);
             if (activeChannel) {
+                state.activeChannelId = action.payload;
                 activeChannel.searchedMessages.data = [];
                 activeChannel.searchedMessages.hasMore = false;
             }

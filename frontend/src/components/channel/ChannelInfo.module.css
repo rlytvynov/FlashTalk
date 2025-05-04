@@ -164,15 +164,25 @@
     user-select: unset;
 }
                     .channelInfoMemberIconContainer .channelInfoMemberInfoOnlineIndicator {
-    position: absolute;
-    top: calc(100% - 0.7rem);
-    right: 0.1rem;
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 50%;
-    background: lawngreen;
-    border: 2px solid white;
-}
+                        position: absolute;
+                        top: calc(100% - 0.7rem);
+                        right: 0.1rem;
+                        width: 0.8rem;
+                        height: 0.8rem;
+                        border-radius: 50%;
+                        background: lawngreen;
+                        border: 2px solid white;
+                    }
+                    .channelInfoMemberIconContainer .channelInfoMemberInfoOfflineIndicator {
+                        position: absolute;
+                        top: calc(100% - 0.7rem);
+                        right: 0.1rem;
+                        width: 0.8rem;
+                        height: 0.8rem;
+                        border-radius: 50%;
+                        background: red;
+                        border: 2px solid white;
+                    }
                 .channelInfoMemberContainer .channelInfoMemberName {
     font-size: 1rem;
     color: var(--color-text-dark);

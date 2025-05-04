@@ -76,7 +76,7 @@
     flex: 1;
     overflow-y: auto;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     padding: 1rem;
     margin-bottom: 1rem;
     list-style: none;

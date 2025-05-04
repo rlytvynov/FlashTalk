@@ -14,8 +14,7 @@ export const createChannel = async (req: Request, res: Response): Promise<any> =
     try {
         const { name, description } = req.body;
         const { rows } = await pool.query("SELECT * FROM create_channel($1, $2, $3)", [name, description, req.user.id])
-        const channel = rows[0]
-        return res.status(200).sendJson(channel, "Channel created successfully");
+        return res.status(200).sendJson(rows[0], "Channel created successfully");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message);
     }
@@ -40,12 +39,12 @@ export const addChannelMember = async (req: Request, res: Response): Promise<any
 
 export const getSearchedMessages = async (req: Request, res: Response): Promise<any> => {
     try {
-        const channelId = req.params.id as string || "0x234";
-        const query = (req.query.query as string || "").toLowerCase();
+        const channelId = req.params.id as string;
+        const query = (req.query.query as string || "")
         const offset = parseInt(req.query.offset as string) || 0;
         const limit = parseInt(req.query.limit as string) || 10;
         const { rows } = await pool.query("SELECT * FROM get_searched_channel_messages($1, $2, $3, $4)", [channelId, query, limit, offset]);
-        return res.status(200).sendJson({messages: rows, hasMore: rows[0].total_count === rows.length}, "Messages retrieved successfully");
+        return res.status(200).sendJson({messages: rows, hasMore: rows[0] ? rows[0].total_count >= rows.length : false}, "Messages retrieved successfully");
     } catch (error) {
         return res.status(500).sendJson({}, (error as Error).message);
     }
