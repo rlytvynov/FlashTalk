@@ -29,4 +29,5 @@ yarn-error.log*
 **.pem
 **.crt
 **.bak
-/project/backend/dist/
+backend/dist/
+Documentation.md

@@ -1,15 +1,18 @@
-import http from "node:http";
-import express from "express";
-import {Server} from "socket.io";
 import cors from "cors"
+import express from "express";
+import jwt from 'jsonwebtoken'
+import http from "node:http";
+import {Server} from "socket.io";
 
-import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
 import corsOptions from "@config/corsConfig";
+import pool from "@config/databaseConfig";
+import { JWT_SECRET } from '@config/envConfig'
+import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
 import responseMiddleware from "@middlewares/responseTypeMiddlware";
 import authRouter from "@routes/authRouter";
-import usersRouter from "@routes/usersRouter";
 import channelsRouter from "@routes/channelsRouter";
-import pool from "@config/databaseConfig";
+import usersRouter from "@routes/usersRouter";
+import { Message } from './types/channel';
 
 declare global {
     namespace Express {
@@ -34,33 +37,55 @@ app.use(responseMiddleware)
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/channels', channelsRouter);
-/**
- * Сокет соединение - DR4
- */
+
+// Socket connection.
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: corsOptions
+const io = new Server(server, { cors: corsOptions });
+const userSessions: Map<string, string> = new Map<string, string>();  // Keep track of connected users (socketId, userId).
+
+// Middleware to verify the user token.
+io.use((socket, next) => {
+    const token = socket.handshake.headers['authorization'];  // The user must provide a token when initiating a connection.
+    if (!token) return next(new Error('Authorization token is missing!'));
+
+    try {
+        jwt.verify(token, JWT_SECRET) as { id: string };
+        return next();
+    } catch (err) {  // Should do better error handling here.
+        return next(new Error('Invalid token!'));
+    }
 });
-//midlleware за authorizаtion на оптребителя за соета
-const userSessions: Map<string, string> = new Map<string, string>();
-io.on("connection", (socket) => {
-    console.log("Нов потребител е свързан: ", socket.id);
-    //примерно добаяне на сокет ид на потребител
-    // userSessions.set(socket.id, socket.user.id.toString())
-    // const associatedChannels =  await pool.query("SELECT * FROM user_channels($1)", [socket.user.id])
-    // for (const channel of associatedChannels.rows) {
-    //     socket.join(channel.id)
-    //     socket.broadcast.to(channel.id).emit('user-connected', socket.user.id.toString());
-    //     console.log("Потребителят е добавен в канала:", channel.name);
-    // }
-    //примерен обработчик на събитие
-    // socket.on("new-message", async (message) => {
-    //     const messages = await pool.query("SELECT * FROM create_message($1, $2, $3, $4)", [message.channelid, message.authorid, message.data ])
-    //     //примерен broadcast emit
-    //     socket.broadcast.to(message.channelid).emit('chat message', messages.rows[0]);
-    // });
+
+io.on("connection", async (socket) => {
+    const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
+    const user = jwt.verify(token, JWT_SECRET) as { id: string, username: string, displayName: string };  // Decrypt user info.
+    console.log(`[server]: User connected. Username: "${user.username}" | id: ${user.id}`);
+
+    userSessions.set(socket.id, user.id);
+
+    // Join user to channels and broadcast that they are online.
+    const channelsOfUser = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [parseInt(user.id)]);
+    for (const channel of channelsOfUser.rows) {
+        socket.join(channel.id);
+        socket.broadcast.to(channel.id).emit('new-user-is-online', user.id);
+    }
+
+    // Send initial info to the user when they first connect.
+    // NOT FINISHED!!! Must add more stuff like other user online statuses.
+    io.to(socket.id).emit('initial-connection', channelsOfUser.rows);
+
+    // Listen for new message from user; write it to the DB; send it to other users.
+    socket.on('new-message', async (channelId, authorId, messageData) => {
+        const messages = await pool.query("SELECT * FROM create_message($1, $2, $3)", [parseInt(channelId), parseInt(authorId), messageData]);
+        const message: Message & { authorname: string } = messages.rows[0];
+        message.authorname = user.displayName;  // The frontend wants the 'displayName' so add it to the message.
+        socket.broadcast.to(channelId).emit('new-message', message);
+        
+        io.to(socket.id).emit('new-message', message);  // tmp | Sent to the sender for debugging.
+    });
 
     socket.on("disconnect", () => {
+        /* to do... */
         console.log("Потребителят е изключен:", socket.id);
     });
 });
