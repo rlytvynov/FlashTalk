@@ -6,7 +6,8 @@ export interface Channel {
     id: string;
     name: string;
     description: string;
-    adminid: string
+    adminid: string;
+    newMessage: boolean;
     members: ChannelMember[];
     messages: Message[];
     searchedMessages: {data: Message[], hasMore: boolean};

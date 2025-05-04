@@ -65,7 +65,7 @@ function ChatPage() {
                                             <div className={styles.lastMessageDate}>
                                                 {lastMessage && formatTimestamp(new Date(lastMessage.date))}
                                             </div>
-                                            {/*{channel.id !== activeChannelId &&*/}
+                                            {/*{channel.id !== activeChannelId && channel.newMessage */}
                                             {/*    <div className={styles.newMessagesIndicator}></div>}*/}
                                         </div>
                                 </li>

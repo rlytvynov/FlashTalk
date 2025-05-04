@@ -32,6 +32,7 @@ export const fetchChannels = createAsyncThunk<
             console.log(response.data)
             return response.data.map(channel => ({
                 ...channel,
+                newMessage: false,
                 members: channel.members.map(member => ({...member, online: false})),
                 searchedMessages: { data: [], hasMore: false }
             }));
