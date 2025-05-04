@@ -227,3 +227,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 select * from get_user_channels_with_members(2);
+select * from users;

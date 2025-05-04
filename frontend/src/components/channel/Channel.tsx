@@ -1,5 +1,5 @@
 import {useSelector} from "react-redux";
-import {RootState} from "@/store/store.ts";
+import store, {RootState} from "@/store/store.ts";
 import {socket} from "@/socket.ts"
 import styles from "./Channel.module.css";
 import MessageSearch from "@/components/message-search/MessageSearch.tsx";
@@ -7,6 +7,8 @@ import {FaInfo, FaTimes} from "react-icons/fa";
 import {formatTimestamp} from "@/utils/formatTimestamp.ts";
 import {useState} from "react";
 import ChannelInfo from "@/components/channel/ChannelInfo.tsx";
+import {appendMessageToChannel, setChannelError} from "@/store/channelsSlice.ts";
+import {Message} from "@/types/message.ts";
 
 function Channel() {
     const {activeChannelId, channels} = useSelector((state: RootState) => state.channelsData);
@@ -16,7 +18,13 @@ function Channel() {
     const [msg, setMsg] = useState("");
     const handleSendMsg = async () => {
         try {
-            socket.emit('new-message', activeChannelId, user?.id, msg);
+            socket.emit('new-message', activeChannelId, user?.id, msg, (error: string, message: Message)=>{
+                if (error) {
+                    store.dispatch(setChannelError({type: "channels/sendMessage", message: error}));
+                } else {
+                    store.dispatch(appendMessageToChannel(message));
+                }
+            });
             setMsg("");
         } catch (error) {
             console.error("Error sending message:", error);

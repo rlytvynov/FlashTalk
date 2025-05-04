@@ -61,7 +61,7 @@ io.on("connection", async (socket) => {
     const user = jwt.verify(token, JWT_SECRET) as { id: string, username: string, displayName: string };  // Decrypt user info.
     console.log(`[server]: User connected. Username: "${user.username}" | id: ${user.id}`);
 
-    userSessions.set(socket.id, user.id);
+    userSessions.set(user.id, socket.id);
 
     // Join user to channels and broadcast that they are online.
     const channelsOfUser = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [parseInt(user.id)]);
@@ -75,13 +75,21 @@ io.on("connection", async (socket) => {
     io.to(socket.id).emit('initial-connection', channelsOfUser.rows);
 
     // Listen for new message from user; write it to the DB; send it to other users.
-    socket.on('new-message', async (channelId, authorId, messageData) => {
-        const messages = await pool.query("SELECT * FROM create_message($1, $2, $3)", [parseInt(channelId), parseInt(authorId), messageData]);
-        const message: Message & { authorname: string } = messages.rows[0];
-        message.authorname = user.displayName;  // The frontend wants the 'displayName' so add it to the message.
-        socket.broadcast.to(channelId).emit('new-message', message);
-        
-        io.to(socket.id).emit('new-message', message);  // tmp | Sent to the sender for debugging.
+    socket.on('new-message', async (channelId, authorId, messageData, callback) => {
+        try {
+            const messages = await pool.query("SELECT * FROM create_message($1, $2, $3)", [parseInt(channelId), parseInt(authorId), messageData]);
+            const message: Message = messages.rows[0];
+            message.authorname = user.displayName;  // The frontend wants the 'displayName' so add it to the message.
+            socket.broadcast.to(channelId).emit('new-message', message);
+
+            if (callback) {
+                callback(null, message);
+            }
+        } catch (error) {
+            if (callback) {
+                callback(error, null);
+            }
+        }
     });
 
     socket.on("disconnect", () => {

@@ -108,6 +108,13 @@ const channelsSlice = createSlice({
         clearChannelError (state) {
             state.error = null;
         },
+
+        setChannelError (state, action) {
+            state.error = {
+                type: action.payload.type,
+                message: action.payload.message
+            }
+        },
         // This reducer may be wrong!!!
         appendMessageToChannel: (state, action) => {
             const channel = state.channels.find(channel => channel.id === action.payload.channelid);
@@ -181,5 +188,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const { setActiveChannelId, utilizeSearchedMessages, clearChannelError, appendMessageToChannel } = channelsSlice.actions;
+export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, appendMessageToChannel } = channelsSlice.actions;
 export default channelsSlice.reducer;
