@@ -2,10 +2,9 @@ import { useEffect } from 'react';
 
 import ChatPage from '@/pages/chat/ChatPage.tsx';
 import { socket } from '@/socket.ts';
-import { Message } from '@/types/message';
-
-import { appendMessageToChannel } from "@/store/channelsSlice.ts";
+import { appendMessageToChannel, updateMemberOnlineStatus } from "@/store/channelsSlice.ts";
 import store from "@/store/store.ts";
+import { Message } from '@/types/message';
 
 function ChatWrapper() {
     useEffect(() => {
@@ -22,8 +21,8 @@ function ChatWrapper() {
             store.dispatch(appendMessageToChannel(message));
         });
 
-        socket.on('new-user-is-online', () => {
-            /* to do... */
+        socket.on('user-online-status-changed', (userOnlineStatus) => {
+            store.dispatch(updateMemberOnlineStatus(userOnlineStatus));
         });
 
         return () => {
@@ -32,7 +31,7 @@ function ChatWrapper() {
             socket.off('disconnect');
             socket.off('initial-connection');
             socket.off('new-message');
-            socket.off('new-user-is-online');
+            socket.off('user-online-status-changed');
             socket.disconnect();
         };
     }, []);

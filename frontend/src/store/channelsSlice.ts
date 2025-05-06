@@ -29,7 +29,6 @@ export const fetchChannels = createAsyncThunk<
             const response = await fetchDataAuth<{data: Channel[]}>(
                 `${import.meta.env.VITE_API_URL}/channels`
             );
-            console.log(response.data)
             return response.data.map(channel => ({
                 ...channel,
                 newMessage: false,
@@ -109,22 +108,25 @@ const channelsSlice = createSlice({
         clearChannelError (state) {
             state.error = null;
         },
-
         setChannelError (state, action) {
             state.error = {
                 type: action.payload.type,
                 message: action.payload.message
             }
         },
-        // This reducer may be wrong!!!
-        appendMessageToChannel: (state, action) => {
+        appendMessageToChannel: (state, action: { payload: Message }) => {
             const channel = state.channels.find(channel => channel.id === action.payload.channelid);
-            if (channel) {
+            if (channel) {  // Should we throw and error if 'channel' is undefined?
                 channel.messages = channel.messages || [];
                 channel.messages.push(action.payload);
             }
         },
-          
+        updateMemberOnlineStatus: (state, action: { payload: { userId: string, isOnline: boolean } }) => {
+            for (const channel of state.channels) {
+                const member = channel.members.find(member => member.id === action.payload.userId);
+                if (member) member.online = action.payload.isOnline;
+            }
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -189,5 +191,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, appendMessageToChannel } = channelsSlice.actions;
+export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, appendMessageToChannel, updateMemberOnlineStatus } = channelsSlice.actions;
 export default channelsSlice.reducer;

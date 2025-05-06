@@ -2,7 +2,7 @@ import cors from "cors"
 import express from "express";
 import jwt from 'jsonwebtoken'
 import http from "node:http";
-import {Server} from "socket.io";
+import { Server, Socket, DefaultEventsMap } from "socket.io";
 
 import corsOptions from "@config/corsConfig";
 import pool from "@config/databaseConfig";
@@ -13,6 +13,7 @@ import authRouter from "@routes/authRouter";
 import channelsRouter from "@routes/channelsRouter";
 import usersRouter from "@routes/usersRouter";
 import { Message } from './types/channel';
+import { User } from './types/user'
 
 declare global {
     namespace Express {
@@ -41,7 +42,7 @@ app.use('/api/channels', channelsRouter);
 // Socket connection.
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
-const userSessions: Map<string, string> = new Map<string, string>();  // Keep track of connected users (socketId, userId).
+const userSessions: Map<string, string> = new Map<string, string>();  // Keep track of connected users (userId, socketId).
 
 // Middleware to verify the user token.
 io.use((socket, next) => {
@@ -56,9 +57,10 @@ io.use((socket, next) => {
     }
 });
 
-io.on("connection", async (socket) => {
+// Handle the initial connection with the user.
+async function initialConnection(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): Promise<User> {
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
-    const user = jwt.verify(token, JWT_SECRET) as { id: string, username: string, displayName: string };  // Decrypt user info.
+    const user = jwt.verify(token, JWT_SECRET) as User;  // Decrypt user info.
     console.log(`[server]: User connected. Username: "${user.username}" | id: ${user.id}`);
 
     userSessions.set(user.id, socket.id);
@@ -67,12 +69,19 @@ io.on("connection", async (socket) => {
     const channelsOfUser = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [parseInt(user.id)]);
     for (const channel of channelsOfUser.rows) {
         socket.join(channel.id);
-        socket.broadcast.to(channel.id).emit('new-user-is-online', user.id);
+        socket.broadcast.to(channel.id).emit('user-online-status-changed', { userId: user.id, isOnline: true });
     }
 
     // Send initial info to the user when they first connect.
     // NOT FINISHED!!! Must add more stuff like other user online statuses.
     io.to(socket.id).emit('initial-connection', channelsOfUser.rows);
+
+    return user;
+};
+
+io.on("connection", async (socket) => {
+    
+    const user = await initialConnection(socket);
 
     // Listen for new message from user; write it to the DB; send it to other users.
     socket.on('new-message', async (channelId, authorId, messageData, callback) => {
@@ -92,16 +101,19 @@ io.on("connection", async (socket) => {
         }
     });
 
-    socket.on("disconnect", () => {
-        /* to do... */
-        console.log("Потребителят е изключен:", socket.id);
+    socket.on('disconnecting', () => {
+        // Broadcast the user is offline.
+        // This line is not in the 'disconnect' listener because 'socket.rooms' is already deleted there.
+        socket.rooms.forEach(room => socket.broadcast.to(room).emit('user-online-status-changed', { userId: user.id, isOnline: false }));
+    });
+
+    socket.on('disconnect', () => {
+        userSessions.delete(user.id);
+        console.log(`[server]: User disconnected. Username: "${user.username}" | id: ${user.id}`);
     });
 });
-
 
 //Server start
 server.listen(SERVER_PORT, () => {
     console.log(`[server]: Server is running at http://${SERVER_HOSTNAME}:${SERVER_PORT}`);
 });
-
-
