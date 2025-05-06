@@ -153,7 +153,6 @@ const authSlice = createSlice({
                     type: "auth/validateToken",
                     message: action.payload || "Token validation failed",
                 };
-                localStorage.removeItem("token");
             });
     }
 });

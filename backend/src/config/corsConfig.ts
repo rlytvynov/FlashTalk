@@ -1,7 +1,15 @@
-const corsOptions = {
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+const httpCorsOptions = {
+    origin: [
+        'http://localhost:3000', // Your local dev server
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
 }
-
-export default corsOptions
+const webSocketCorsOptions = {
+    origin: [
+        'http://localhost:3000',
+    ],
+    allowedHeaders: ['Authorization', 'ngrok-skip-browser-warning'],
+    methods: ['GET', 'POST'],
+}
+export {httpCorsOptions, webSocketCorsOptions}

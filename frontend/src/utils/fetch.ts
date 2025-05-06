@@ -2,6 +2,7 @@ export async function fetchData<T>(url: string, options?: RequestInit): Promise<
     const response = await fetch(url, {
         ...options,
         headers: {
+            'ngrok-skip-browser-warning': 'true',
             'Content-Type': 'application/json',
             ...options?.headers
         },
@@ -11,7 +12,6 @@ export async function fetchData<T>(url: string, options?: RequestInit): Promise<
         const errorResponse = await response.json().catch(() => null);
         throw new Error(errorResponse?.message || 'Неизвестная ошибка');
     }
-
     return await response.json();
 }
 

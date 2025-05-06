@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 import http from "node:http";
 import { Server, Socket, DefaultEventsMap } from "socket.io";
 
-import corsOptions from "@config/corsConfig";
+import {httpCorsOptions, webSocketCorsOptions} from "@config/corsConfig";
 import pool from "@config/databaseConfig";
 import { JWT_SECRET } from '@config/envConfig'
 import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
@@ -28,7 +28,8 @@ declare global {
 
 // Базова конфигурация
 const app = express();
-app.use(cors(corsOptions))
+app.use(cors(httpCorsOptions))
+app.options('*', cors(httpCorsOptions));
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
 app.use(responseMiddleware)
@@ -41,7 +42,7 @@ app.use('/api/channels', channelsRouter);
 
 // Socket connection.
 const server = http.createServer(app);
-const io = new Server(server, { cors: corsOptions });
+const io = new Server(server, { cors: webSocketCorsOptions });
 const userSessions: Map<string, string> = new Map<string, string>();  // Keep track of connected users (userId, socketId).
 
 // Middleware to verify the user token.
@@ -53,6 +54,7 @@ io.use((socket, next) => {
         jwt.verify(token, JWT_SECRET) as { id: string };
         return next();
     } catch (err) {  // Should do better error handling here.
+        console.log(err)
         return next(new Error('Invalid token!'));
     }
 });

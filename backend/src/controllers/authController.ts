@@ -73,6 +73,7 @@ export const handleLogin = async (req: Request, res: Response): Promise<any> => 
             }
         }, "LoginPage successful");
     } catch (error) {
+        console.log("Error during login:", error);
         return res.status(500).sendJson({}, (error as Error).message)
     }
 }

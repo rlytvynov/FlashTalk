@@ -29,6 +29,7 @@ export const fetchChannels = createAsyncThunk<
             const response = await fetchDataAuth<{data: Channel[]}>(
                 `${import.meta.env.VITE_API_URL}/channels`
             );
+            console.log(response.data)
             return response.data.map(channel => ({
                 ...channel,
                 newMessage: false,
@@ -36,6 +37,7 @@ export const fetchChannels = createAsyncThunk<
                 searchedMessages: { data: [], hasMore: false }
             }));
         } catch (error) {
+            console.log(error)
             return rejectWithValue((error as Error).message);
         }
     }
