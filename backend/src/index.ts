@@ -95,7 +95,6 @@ async function checkAdmin(userId: string, channelId: string) {
 async function initialConnection(socket: WebSocket): Promise<User> {
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
     const user = jwt.verify(token, JWT_SECRET) as User;  // Decrypt user info.
-    console.log(`[server]: User connected. Username: "${user.username}" | id: ${user.id}`);
 
     userSessions.set(user.id, socket.id);
 
@@ -149,31 +148,36 @@ io.on("connection", async (socket) => {
     });
 
     socket.on('add-users-to-channel', async (channelId: string, userIds: string[], callback) => {
-        try {
-            checkAdmin(user.id, channelId);
+        const usersAdded = [];
 
-            for (const userId of userIds) 
-                await pool.query('SELECT * FROM add_user_to_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
-
-            // TO DO: send info to the newly added user and to the other users in the channel. This is not entirely necessary because
-            // they can get the changes on page reload.
-
-            if (callback) callback(null, null);  // TO DO: finish this callback.
-
-        } catch (error) {
-            if (callback) callback(error, null);  // Send the error to the user. Have to check exactly how this works.
-        }
-    });
-
-    // TO DO: test if this works.
-    socket.on('remove-users-from-channel', async (channelId: string, userIds: string[], callback) => {
         try {
             checkAdmin(user.id, channelId);
 
             for (const userId of userIds) {
-                // Database function 'remove_user_from_channel' must be implemented.
-                await pool.query('SELECT * FROM remove_user_from_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
+                await pool.query('SELECT * FROM add_user_to_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
+                // It would be better if the DB function 'add_user_to_channel' returned 'id', 'username' and 'displayname'. Then the following line can be skipped.
+                const result = await pool.query('SELECT id, username, displayname FROM users WHERE id = $1', [parseInt(userId)]);
+                const user = { ...result.rows[0], online: userSessions.has(userId) };
+                usersAdded.push(user);
             }
+
+            // TO DO: send info to the newly added user and to the other users in the channel. This is not entirely necessary because
+            // they can get the changes on page reload.
+
+            if (callback) callback(null, usersAdded);
+
+        } catch (error) {
+            if (callback) callback(error, usersAdded);
+        }
+    });
+
+    // TO DO: test if this works.
+    socket.on('remove-user-from-channel', async (channelId: string, userId: string, callback) => {
+        try {
+            checkAdmin(user.id, channelId);
+
+            // Database function 'remove_user_from_channel' must be implemented.
+            await pool.query('SELECT * FROM remove_user_from_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
             
             // TO DO: send info to the removed user and to the other users in the channel. This is not entirely necessary because
             // they can get the changes on page reload.
@@ -181,7 +185,7 @@ io.on("connection", async (socket) => {
             if (callback) callback(null);  // TO DO: finish this callback.
 
         } catch (error) {
-            if (callback) callback(error);  // Send the error to the user. Have to check exactly how this works.
+            if (callback) callback(error);
         }
     });
 
@@ -195,7 +199,6 @@ io.on("connection", async (socket) => {
 
     socket.on('disconnect', () => {
         userSessions.delete(user.id);
-        console.log(`[server]: User disconnected. Username: "${user.username}" | id: ${user.id}`);
     });
 });
 

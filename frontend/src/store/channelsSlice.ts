@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {fetchDataAuth} from "@/utils/fetch.ts";
-import {Channel} from "../types/channel.ts";
+import {Channel, ChannelMember} from "../types/channel.ts";
 import {Message} from "@/types/message.ts";
 import {Error} from "@/types/error.ts";
 
@@ -116,7 +116,10 @@ const channelsSlice = createSlice({
                 message: action.payload.message
             }
         },
-        addMembersToChannel (state, action) { /* to do ... */ },
+        addMembersToChannel (state, action: { payload: { channelId: string, newMembers: ChannelMember[] } }) { 
+            /* to do ... */
+            console.log(action.payload);  // tmp
+        },
         // The messages in every given subarray must be from the same channel.
         appendMessagesToChannels: (state, action: { payload: Message[][] }) => {
             for (const channelMessages of action.payload) {

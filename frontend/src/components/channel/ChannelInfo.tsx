@@ -51,11 +51,11 @@ function ChannelInfo({isInfoVisible}: Props) {
         try {
             const candidateIds = candidates.map(candidate => candidate.id);
             
-            socket?.emit('add-users-to-channel', activeChannelId, candidateIds, (error: Error, members: ChannelMember[]) => {
-                if (error)
+            socket?.emit('add-users-to-channel', activeChannelId, candidateIds, (error: Error, newMembers: ChannelMember[]) => {
+                if (error) 
                     store.dispatch(setChannelError({ type: "channels/addMembers", message: error.message }));
-                else
-                    store.dispatch(addMembersToChannel({channelId: activeChannelId, members}));
+                
+                store.dispatch(addMembersToChannel({ channelId: activeChannelId, newMembers }));
             });
 
             setRedactedMode(false);
@@ -67,6 +67,7 @@ function ChannelInfo({isInfoVisible}: Props) {
 
     const handleDeleteMember = async (memberId: string) => {
         try {
+            // TO DO:
             //socket.emit("delete-member", () => {
             //   store.dispatch(deleteMember({channelId: activeChannelId, memberId}))
             // })
