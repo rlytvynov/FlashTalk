@@ -17,11 +17,14 @@ function ChatWrapper() {
         socket.on('connect', () => { /* TO DO optional: prompt the user that they are online. */});
         socket.on('disconnect', () => { /* TO DO optional: prompt the user that they are offline. */ });
 
-        socket.on('initial-connection', (channelsMessages, friendsOnline) => {
-            // At the moment 'appendMessagesToChannels' and 'updateMembersOnlineStatus' are being executed
-            // before the channels are initialized (so it does nothing).
-            store.dispatch(appendMessagesToChannels(channelsMessages));
-            store.dispatch(updateMembersOnlineStatus(friendsOnline));
+        socket.on('initial-connection', (channelsMessages, friendsOnline: string[]) => {
+            //store.dispatch(appendMessagesToChannels(channelsMessages));  // this may not be necessary
+            console.log(friendsOnline);
+            setTimeout(() => {
+                store.dispatch(updateMembersOnlineStatus(friendsOnline.map(userId => {
+                    return { userId, isOnline: true };
+                })))
+            }, 500);  // Wait for 'store' to initialize.
         });
 
         socket.on('new-message', (message: Message) => {
