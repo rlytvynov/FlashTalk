@@ -70,7 +70,7 @@ function getFriendsOnline(socket: WebSocket): String[] {
         if (socketId === socket.id) continue;  // Skip the calling socket.
 
         const socketRooms = roomsMap.get(socketId) as Set<string>;
-        if(!areDisjointSets(socket.rooms, socketRooms))  // Are the two users in a common room (are they "fiends").
+        if(!areDisjointSets(socket.rooms, socketRooms))  // Are the two users in a common room (are they "friends").
             friendsOnline.push(userId);
     }
 
@@ -86,17 +86,13 @@ async function initialConnection(socket: WebSocket): Promise<User> {
     userSessions.set(user.id, socket.id);
 
     // Join user to channels and broadcast that they are online.
-    const channelsOfUser = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [parseInt(user.id)]);
+    const channelsOfUser = await pool.query('SELECT * FROM get_user_channels_with_members($1)', [parseInt(user.id)]);
     for (const channel of channelsOfUser.rows) {
         socket.join(channel.id);
         // This is not a good way to broadcast that the user is now online because if another user is let's say in 5 of these rooms
         // they will get 5 of these messages, which is unnecessary. Should fix it!!!
-        socket.to(channel.id).emit('users-online-status-changed', [{ userId: user.id, isOnline: true }]);
+        socket.to(channel.id).emit('user-is-online', user.id);
     }
-
-    const friendsOnline = getFriendsOnline(socket).map(friendId => {
-        return { userId: friendId, isOnline: true };
-    });
 
     const channelsMessages: (Message & { channelid: string })[][] = channelsOfUser.rows.map(channel => {
         // Add property 'channelid' to every message.
@@ -105,6 +101,8 @@ async function initialConnection(socket: WebSocket): Promise<User> {
         });
         return messages;
     });
+
+    const friendsOnline = getFriendsOnline(socket);
 
     // At the moment we're sending only the last 10 messages per channel. If we don't implement "load previous messages" we must 
     // change this to send the whole chat history.
@@ -140,7 +138,7 @@ io.on("connection", async (socket) => {
         // This line is not in the 'disconnect' listener because 'socket.rooms' is already deleted there.
         // This is not a good way to broadcast that the user is now offline because if another user is let's say in 5 of these rooms
         // they will get 5 of these messages, which is unnecessary. Should be fixed!!!
-        socket.rooms.forEach(room => socket.to(room).emit('users-online-status-changed', [{ userId: user.id, isOnline: false }]));
+        socket.rooms.forEach(room => socket.to(room).emit('user-is-offline', user.id));
     });
 
     socket.on('disconnect', () => {

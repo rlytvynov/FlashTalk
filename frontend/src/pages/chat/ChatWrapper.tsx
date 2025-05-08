@@ -28,19 +28,22 @@ function ChatWrapper() {
             store.dispatch(appendMessageToChannel(message));
         });
 
-        // This listener really should be split in two listeners 'users-are-online' and 'users-are-offline'
-        // to skip sending 'isOnline' variable.
-        socket.on('users-online-status-changed', (usersOnlineStatus: { userId: string, isOnline: boolean }[]) => {
-            store.dispatch(updateMembersOnlineStatus(usersOnlineStatus));
+        socket.on('user-is-offline', userId => {
+            store.dispatch(updateMembersOnlineStatus([{ userId, isOnline: false }]));
         });
-
+        
+        socket.on('user-is-online', userId => {
+            store.dispatch(updateMembersOnlineStatus([{ userId, isOnline: true }]));
+        });
+        
         return () => {
             // All listeners socket.on(...) should be detached like this.
             socket?.off('connect');
             socket?.off('disconnect');
             socket?.off('initial-connection');
             socket?.off('new-message');
-            socket?.off('users-online-status-changed');
+            socket?.off('user-is-offline');
+            socket?.off('user-is-online');
             socket?.disconnect();
         };
     }, []);
