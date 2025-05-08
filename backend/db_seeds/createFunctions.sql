@@ -191,18 +191,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION add_user_to_channel(
+
     _userId INTEGER,
     _channelId INTEGER
 ) RETURNS TABLE (
+
     id INTEGER,
     userId INTEGER,
     channelId INTEGER
 ) AS $$
 DECLARE
+
     user_exists BOOLEAN;
     channel_exists BOOLEAN;
     already_member BOOLEAN;
 BEGIN
+
     SELECT EXISTS(SELECT 1 FROM users u WHERE u.id = _userId) INTO user_exists;
     IF NOT user_exists THEN
         RAISE EXCEPTION 'User with ID % does not exist', _userId;

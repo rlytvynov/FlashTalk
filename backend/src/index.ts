@@ -8,6 +8,7 @@ import { httpCorsOptions, webSocketCorsOptions } from "@config/corsConfig";
 import pool from "@config/databaseConfig";
 import { JWT_SECRET } from '@config/envConfig'
 import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
+import { PermissionError, ResourceDoesNotExistError } from './exceptions/exceptions'
 import responseMiddleware from "@middlewares/responseTypeMiddlware";
 import authRouter from "@routes/authRouter";
 import channelsRouter from "@routes/channelsRouter";
@@ -77,6 +78,19 @@ function getFriendsOnline(socket: WebSocket): String[] {
     return friendsOnline;
 }
 
+// Throws an error if:
+//  - 'channelId' does not exist
+//  - 'userId' is not admin
+async function checkAdmin(userId: string, channelId: string) {
+    const result = await pool.query('SELECT adminId FROM channels WHERE id = $1', [parseInt(channelId)]);  // Get the adminId of the channel.
+            
+    if (result.rows.length === 0)
+        throw new ResourceDoesNotExistError('Error! The channel does not exist.');
+
+    if (userId !== result.rows[0].adminId.toString())
+        throw new PermissionError('You cannot add or remove users because you are not an admin of this channel!');
+}
+
 // Handle the initial connection with the user.
 async function initialConnection(socket: WebSocket): Promise<User> {
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
@@ -116,9 +130,10 @@ io.on("connection", async (socket) => {
     const user = await initialConnection(socket);
 
     // Listen for new message from user; write it to the DB; send it to other users.
-    socket.on('new-message', async (channelId, authorId, messageData, callback) => {
+    // TO DO: verify the input data before writing to the DB. At the moment we can pass in any random 'channelId'.
+    socket.on('new-message', async (channelId: string, authorId: string, messageData: string, callback) => {
         try {
-            const messages = await pool.query("SELECT * FROM create_message($1, $2, $3)", [parseInt(channelId), parseInt(authorId), messageData]);
+            const messages = await pool.query('SELECT * FROM create_message($1, $2, $3)', [parseInt(channelId), parseInt(authorId), messageData]);
             const message: Message = messages.rows[0];
             message.authorname = user.displayName;  // The frontend wants the 'displayName' so add it to the message.
             socket.broadcast.to(channelId).emit('new-message', message);
@@ -130,6 +145,37 @@ io.on("connection", async (socket) => {
             if (callback) {
                 callback(error, null);
             }
+        }
+    });
+
+    // TO DO: test if this works.
+    socket.on('add-user-to-channel', async (userId: string, channelId: string, callback) => {
+        try {
+            checkAdmin(user.id, channelId);
+
+            await pool.query('SELECT * FROM add_user_to_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
+
+            // TO DO: send info to the newly added user and to the other users in the channel. This is not entirely necessary because
+            // they can get the changes on page reload.
+
+        } catch (error) {
+            if (callback) callback(error);  // Send the error to the user. Have to check exactly how this works.
+        }
+    });
+
+    // TO DO: test if this works.
+    socket.on('remove-user-from-channel', async (userId: string, channelId: string, callback) => {
+        try {
+            checkAdmin(user.id, channelId);
+
+            // Database function 'remove_user_from_channel' must be implemented.
+            await pool.query('SELECT * FROM remove_user_from_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
+
+            // TO DO: send info to the removed user and to the other users in the channel. This is not entirely necessary because
+            // they can get the changes on page reload.
+
+        } catch (error) {
+            if (callback) callback(error);  // Send the error to the user. Have to check exactly how this works.
         }
     });
 
