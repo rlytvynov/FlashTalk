@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 import http from "node:http";
 import { Server, Socket, DefaultEventsMap } from "socket.io";
 
-import {httpCorsOptions, webSocketCorsOptions} from "@config/corsConfig";
+import { httpCorsOptions, webSocketCorsOptions } from "@config/corsConfig";
 import pool from "@config/databaseConfig";
 import { JWT_SECRET } from '@config/envConfig'
 import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
@@ -14,6 +14,7 @@ import channelsRouter from "@routes/channelsRouter";
 import usersRouter from "@routes/usersRouter";
 import { Message } from './types/channel';
 import { User } from './types/user'
+import { areDisjointSets } from './utils/setOperations'
 
 declare global {
     namespace Express {
@@ -44,6 +45,7 @@ app.use('/api/channels', channelsRouter);
 const server = http.createServer(app);
 const io = new Server(server, { cors: webSocketCorsOptions });
 const userSessions: Map<string, string> = new Map<string, string>();  // Keep track of connected users (userId, socketId).
+type WebSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
 
 // Middleware to verify the user token.
 io.use((socket, next) => {
@@ -59,8 +61,24 @@ io.use((socket, next) => {
     }
 });
 
+// Returns the userIds of the users which are currently online and are in at least one common room with the given user (socket).
+// So basically returns "friends online".
+function getFriendsOnline(socket: WebSocket): String[] {
+    const roomsMap = io.of('/').adapter.sids;  // Map<SocketId, Set<Room>>
+    const friendsOnline = [];
+    for (const [userId, socketId] of userSessions) {
+        if (socketId === socket.id) continue;  // Skip the calling socket.
+
+        const socketRooms = roomsMap.get(socketId) as Set<string>;
+        if(!areDisjointSets(socket.rooms, socketRooms))  // Are the two users in a common room (are they "fiends").
+            friendsOnline.push(userId);
+    }
+
+    return friendsOnline;
+}
+
 // Handle the initial connection with the user.
-async function initialConnection(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): Promise<User> {
+async function initialConnection(socket: WebSocket): Promise<User> {
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
     const user = jwt.verify(token, JWT_SECRET) as User;  // Decrypt user info.
     console.log(`[server]: User connected. Username: "${user.username}" | id: ${user.id}`);
@@ -71,12 +89,26 @@ async function initialConnection(socket: Socket<DefaultEventsMap, DefaultEventsM
     const channelsOfUser = await pool.query("SELECT * FROM get_user_channels_with_members($1)", [parseInt(user.id)]);
     for (const channel of channelsOfUser.rows) {
         socket.join(channel.id);
-        socket.broadcast.to(channel.id).emit('user-online-status-changed', { userId: user.id, isOnline: true });
+        // This is not a good way to broadcast that the user is now online because if another user is let's say in 5 of these rooms
+        // they will get 5 of these messages, which is unnecessary. Should fix it!!!
+        socket.to(channel.id).emit('users-online-status-changed', [{ userId: user.id, isOnline: true }]);
     }
 
-    // Send initial info to the user when they first connect.
-    // NOT FINISHED!!! Must add more stuff like other user online statuses.
-    io.to(socket.id).emit('initial-connection', channelsOfUser.rows);
+    const friendsOnline = getFriendsOnline(socket).map(friendId => {
+        return { userId: friendId, isOnline: true };
+    });
+
+    const channelsMessages: (Message & { channelid: string })[][] = channelsOfUser.rows.map(channel => {
+        // Add property 'channelid' to every message.
+        const messages = channel.messages.map((message: Message) => {
+            return {...message, channelid: channel.id.toString() };
+        });
+        return messages;
+    });
+
+    // At the moment we're sending only the last 10 messages per channel. If we don't implement "load previous messages" we must 
+    // change this to send the whole chat history.
+    io.to(socket.id).emit('initial-connection', channelsMessages, friendsOnline);
 
     return user;
 };
@@ -106,7 +138,9 @@ io.on("connection", async (socket) => {
     socket.on('disconnecting', () => {
         // Broadcast the user is offline.
         // This line is not in the 'disconnect' listener because 'socket.rooms' is already deleted there.
-        socket.rooms.forEach(room => socket.broadcast.to(room).emit('user-online-status-changed', { userId: user.id, isOnline: false }));
+        // This is not a good way to broadcast that the user is now offline because if another user is let's say in 5 of these rooms
+        // they will get 5 of these messages, which is unnecessary. Should be fixed!!!
+        socket.rooms.forEach(room => socket.to(room).emit('users-online-status-changed', [{ userId: user.id, isOnline: false }]));
     });
 
     socket.on('disconnect', () => {

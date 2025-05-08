@@ -116,17 +116,24 @@ const channelsSlice = createSlice({
                 message: action.payload.message
             }
         },
-        appendMessageToChannel: (state, action: { payload: Message }) => {
-            const channel = state.channels.find(channel => channel.id === action.payload.channelid);
-            if (channel) {  // Should we throw and error if 'channel' is undefined?
-                channel.messages = channel.messages || [];
-                channel.messages.push(action.payload);
+        // The messages in every given subarray must be from the same channel.
+        appendMessagesToChannels: (state, action: { payload: Message[][] }) => {
+            for (const channelMessages of action.payload) {
+                if (channelMessages.length === 0) continue;
+                const channel = state.channels.find(channel => channel.id === channelMessages[0].channelid);
+                channel?.messages.push(...channelMessages);
             }
         },
-        updateMemberOnlineStatus: (state, action: { payload: { userId: string, isOnline: boolean } }) => {
+        appendMessageToChannel: (state, action: { payload: Message }) => {
+            const channel = state.channels.find(channel => channel.id === action.payload.channelid);
+            channel?.messages.push(action.payload);
+        },
+        updateMembersOnlineStatus: (state, action: { payload: { userId: string, isOnline: boolean }[] }) => {
             for (const channel of state.channels) {
-                const member = channel.members.find(member => member.id === action.payload.userId);
-                if (member) member.online = action.payload.isOnline;
+                for (const user of action.payload) {
+                    const member = channel.members.find(member => member.id === user.userId);
+                    if (member) member.online = user.isOnline;
+                }
             }
         }
     },
@@ -193,5 +200,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, appendMessageToChannel, updateMemberOnlineStatus } = channelsSlice.actions;
+export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
 export default channelsSlice.reducer;
