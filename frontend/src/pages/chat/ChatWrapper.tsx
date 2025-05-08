@@ -14,12 +14,12 @@ function ChatWrapper() {
 
         socket.connect();
 
-        socket.on('connect', () => { /* to do... */ });
-        socket.on('disconnect', () => { /* to do... */ });
+        socket.on('connect', () => { /* TO DO optional: prompt the user that they are online. */});
+        socket.on('disconnect', () => { /* TO DO optional: prompt the user that they are offline. */ });
 
         socket.on('initial-connection', (channelsMessages, friendsOnline) => {
-            // At the moment 'appendMessagesToChannels' is being executed before the channels are initialized (so it does nothing).
-            // Maybe the same is happening with 'updateMembersOnlineStatus'.
+            // At the moment 'appendMessagesToChannels' and 'updateMembersOnlineStatus' are being executed
+            // before the channels are initialized (so it does nothing).
             store.dispatch(appendMessagesToChannels(channelsMessages));
             store.dispatch(updateMembersOnlineStatus(friendsOnline));
         });
@@ -31,7 +31,7 @@ function ChatWrapper() {
         socket.on('user-is-offline', userId => {
             store.dispatch(updateMembersOnlineStatus([{ userId, isOnline: false }]));
         });
-        
+
         socket.on('user-is-online', userId => {
             store.dispatch(updateMembersOnlineStatus([{ userId, isOnline: true }]));
         });

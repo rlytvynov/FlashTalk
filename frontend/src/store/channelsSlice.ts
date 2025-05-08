@@ -116,6 +116,7 @@ const channelsSlice = createSlice({
                 message: action.payload.message
             }
         },
+        addMembersToChannel (state, action) { /* to do ... */ },
         // The messages in every given subarray must be from the same channel.
         appendMessagesToChannels: (state, action: { payload: Message[][] }) => {
             for (const channelMessages of action.payload) {
@@ -200,5 +201,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
+export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, addMembersToChannel, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
 export default channelsSlice.reducer;

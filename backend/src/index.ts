@@ -86,8 +86,8 @@ async function checkAdmin(userId: string, channelId: string) {
             
     if (result.rows.length === 0)
         throw new ResourceDoesNotExistError('Error! The channel does not exist.');
-
-    if (userId !== result.rows[0].adminId.toString())
+    
+    if (parseInt(userId) !== result.rows[0].adminid)
         throw new PermissionError('You cannot add or remove users because you are not an admin of this channel!');
 }
 
@@ -148,31 +148,37 @@ io.on("connection", async (socket) => {
         }
     });
 
-    // TO DO: test if this works.
-    socket.on('add-user-to-channel', async (userId: string, channelId: string, callback) => {
+    socket.on('add-users-to-channel', async (channelId: string, userIds: string[], callback) => {
         try {
             checkAdmin(user.id, channelId);
 
-            await pool.query('SELECT * FROM add_user_to_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
+            for (const userId of userIds) 
+                await pool.query('SELECT * FROM add_user_to_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
 
             // TO DO: send info to the newly added user and to the other users in the channel. This is not entirely necessary because
             // they can get the changes on page reload.
 
+            if (callback) callback(null, null);  // TO DO: finish this callback.
+
         } catch (error) {
-            if (callback) callback(error);  // Send the error to the user. Have to check exactly how this works.
+            if (callback) callback(error, null);  // Send the error to the user. Have to check exactly how this works.
         }
     });
 
     // TO DO: test if this works.
-    socket.on('remove-user-from-channel', async (userId: string, channelId: string, callback) => {
+    socket.on('remove-users-from-channel', async (channelId: string, userIds: string[], callback) => {
         try {
             checkAdmin(user.id, channelId);
 
-            // Database function 'remove_user_from_channel' must be implemented.
-            await pool.query('SELECT * FROM remove_user_from_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
-
+            for (const userId of userIds) {
+                // Database function 'remove_user_from_channel' must be implemented.
+                await pool.query('SELECT * FROM remove_user_from_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
+            }
+            
             // TO DO: send info to the removed user and to the other users in the channel. This is not entirely necessary because
             // they can get the changes on page reload.
+
+            if (callback) callback(null);  // TO DO: finish this callback.
 
         } catch (error) {
             if (callback) callback(error);  // Send the error to the user. Have to check exactly how this works.

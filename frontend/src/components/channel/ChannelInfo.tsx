@@ -1,8 +1,11 @@
 import styles from "@/components/channel/ChannelInfo.module.css";
 import {useSelector} from "react-redux";
-import {RootState} from "@/store/store.ts";
+import {setChannelError, addMembersToChannel} from "@/store/channelsSlice.ts";
+import store, {RootState} from "@/store/store.ts";
 import {useState} from "react";
 import {FaPlus, FaSearch, FaTimes, FaTrash} from "react-icons/fa";
+import {socket} from "@/socket.ts"
+import {ChannelMember} from "@/types/channel.ts"
 import {User} from "@/types/user.ts";
 import {fetchDataAuth} from "@/utils/fetch.ts";
 
@@ -46,9 +49,15 @@ function ChannelInfo({isInfoVisible}: Props) {
 
     const handleAddMembers = async () => {
         try {
-            //socket.emit("add-member", candidates, (members: ChannelMember[]) => {
-            //   store.dispatch(addMember({channelId: activeChannelId, members}))
-            // })
+            const candidateIds = candidates.map(candidate => candidate.id);
+            
+            socket?.emit('add-users-to-channel', activeChannelId, candidateIds, (error: Error, members: ChannelMember[]) => {
+                if (error)
+                    store.dispatch(setChannelError({ type: "channels/addMembers", message: error.message }));
+                else
+                    store.dispatch(addMembersToChannel({channelId: activeChannelId, members}));
+            });
+
             setRedactedMode(false);
             setCandidates([]);
         } catch (error) {
@@ -58,7 +67,7 @@ function ChannelInfo({isInfoVisible}: Props) {
 
     const handleDeleteMember = async (memberId: string) => {
         try {
-            //socket.emit("delete-member" () => {
+            //socket.emit("delete-member", () => {
             //   store.dispatch(deleteMember({channelId: activeChannelId, memberId}))
             // })
         } catch (error) {

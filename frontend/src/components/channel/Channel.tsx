@@ -18,7 +18,7 @@ function Channel() {
     const [msg, setMsg] = useState("");
     const handleSendMsg = async () => {
         try {
-            socket.emit('new-message', activeChannelId, user?.id, msg, (error: string, message: Message)=>{
+            socket?.emit('new-message', activeChannelId, user?.id, msg, (error: string, message: Message)=>{
                 if (error) {
                     store.dispatch(setChannelError({type: "channels/sendMessage", message: error}));
                 } else {
