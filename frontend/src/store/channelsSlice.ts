@@ -116,7 +116,11 @@ const channelsSlice = createSlice({
                 message: action.payload.message
             }
         },
-        addMembersToChannel (state, action: { payload: { channelId: string, newMembers: ChannelMember[] } }) { 
+        addMembersToChannel: (state, action: { payload: { channelId: string, newMembers: ChannelMember[] } }) => { 
+            /* to do ... */
+            console.log(action.payload);  // tmp
+        },
+        removeMemberFromChannel: (state, action: { payload: { channelId: string, memberId: string } }) => {
             /* to do ... */
             console.log(action.payload);  // tmp
         },
@@ -204,5 +208,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, addMembersToChannel, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
+export const { setActiveChannelId, utilizeSearchedMessages, setChannelError, clearChannelError, addMembersToChannel, removeMemberFromChannel, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
 export default channelsSlice.reducer;

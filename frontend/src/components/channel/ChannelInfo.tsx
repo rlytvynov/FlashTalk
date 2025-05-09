@@ -1,6 +1,6 @@
 import styles from "@/components/channel/ChannelInfo.module.css";
 import {useSelector} from "react-redux";
-import {setChannelError, addMembersToChannel} from "@/store/channelsSlice.ts";
+import {setChannelError, addMembersToChannel, removeMemberFromChannel} from "@/store/channelsSlice.ts";
 import store, {RootState} from "@/store/store.ts";
 import {useState} from "react";
 import {FaPlus, FaSearch, FaTimes, FaTrash} from "react-icons/fa";
@@ -67,10 +67,12 @@ function ChannelInfo({isInfoVisible}: Props) {
 
     const handleDeleteMember = async (memberId: string) => {
         try {
-            // TO DO:
-            //socket.emit("delete-member", () => {
-            //   store.dispatch(deleteMember({channelId: activeChannelId, memberId}))
-            // })
+            socket?.emit('remove-user-from-channel', activeChannelId, memberId, (error: Error) => {
+                if (error)
+                    store.dispatch(setChannelError({ type: 'channels/removeMember', message: error.message }));
+                else
+                    store.dispatch(removeMemberFromChannel({ channelId: activeChannelId, memberId }))
+            });
         } catch (error) {
             console.error("Error deleting member:", error);
         }

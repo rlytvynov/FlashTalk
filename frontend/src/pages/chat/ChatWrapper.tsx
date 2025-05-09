@@ -19,6 +19,7 @@ function ChatWrapper() {
 
         socket.on('initial-connection', (channelsMessages, friendsOnline: string[]) => {
             //store.dispatch(appendMessagesToChannels(channelsMessages));  // this may not be necessary
+            
             console.log(friendsOnline);
             setTimeout(() => {
                 store.dispatch(updateMembersOnlineStatus(friendsOnline.map(userId => {

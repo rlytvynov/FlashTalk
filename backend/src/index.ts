@@ -15,6 +15,7 @@ import channelsRouter from "@routes/channelsRouter";
 import usersRouter from "@routes/usersRouter";
 import { Message } from './types/channel';
 import { User } from './types/user'
+import dbQueries from './utils/dbQueries'
 import { areDisjointSets } from './utils/setOperations'
 
 declare global {
@@ -129,7 +130,7 @@ io.on("connection", async (socket) => {
     const user = await initialConnection(socket);
 
     // Listen for new message from user; write it to the DB; send it to other users.
-    // TO DO: verify the input data before writing to the DB. At the moment we can pass in any random 'channelId'.
+    // TO DO: verify the input data before writing to the DB. For example at the moment we can pass in any random 'channelId'.
     socket.on('new-message', async (channelId: string, authorId: string, messageData: string, callback) => {
         try {
             const messages = await pool.query('SELECT * FROM create_message($1, $2, $3)', [parseInt(channelId), parseInt(authorId), messageData]);
@@ -148,23 +149,28 @@ io.on("connection", async (socket) => {
     });
 
     socket.on('add-users-to-channel', async (channelId: string, userIds: string[], callback) => {
-        const usersAdded = [];
-
+        const usersAdded = [];  // Successfully added users.
         try {
             checkAdmin(user.id, channelId);
 
             for (const userId of userIds) {
-                await pool.query('SELECT * FROM add_user_to_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
-                // It would be better if the DB function 'add_user_to_channel' returned 'id', 'username' and 'displayname'. Then the following line can be skipped.
-                const result = await pool.query('SELECT id, username, displayname FROM users WHERE id = $1', [parseInt(userId)]);
-                const user = { ...result.rows[0], online: userSessions.has(userId) };
+                await dbQueries.addUserToChannel(userId, channelId);
+                const user = await dbQueries.getUserById(userId);
+                (user as any).online = userSessions.has(userId);
                 usersAdded.push(user);
+
+                // Add the user to the channel room if they are online.
+                const userSocketId = userSessions.get(userId);
+                if (userSocketId) {
+                    const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
+                    userSocket.join(channelId);
+                }
             }
 
-            // TO DO: send info to the newly added user and to the other users in the channel. This is not entirely necessary because
-            // they can get the changes on page reload.
-
-            if (callback) callback(null, usersAdded);
+            // TO DO:
+            //  - Send info to the newly added user and to the other users in the channel (this is not entirely necessary because they can get the changes on page reload).
+            
+            if (callback) callback(null, usersAdded);  // Send back added users to the admin who added them.
 
         } catch (error) {
             if (callback) callback(error, usersAdded);
@@ -172,15 +178,21 @@ io.on("connection", async (socket) => {
     });
 
     // TO DO: test if this works.
+    // TO DO: don't allow admins to remove themselves or add some other safeguard.
     socket.on('remove-user-from-channel', async (channelId: string, userId: string, callback) => {
         try {
             checkAdmin(user.id, channelId);
+            dbQueries.removeUserFromChannel(userId, channelId);
 
-            // Database function 'remove_user_from_channel' must be implemented.
-            await pool.query('SELECT * FROM remove_user_from_channel($1, $2)', [parseInt(userId), parseInt(channelId)]);
-            
-            // TO DO: send info to the removed user and to the other users in the channel. This is not entirely necessary because
-            // they can get the changes on page reload.
+            // Remove user from the channel room if they are online.
+            const userSocketId = userSessions.get(userId);
+            if (userSocketId) {
+                const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
+                userSocket.leave(channelId);
+            }
+
+            // TO DO:
+            //  - Send info to the removed user and to the other users in the channel (this is not entirely necessary because they can get the changes on page reload).
 
             if (callback) callback(null);  // TO DO: finish this callback.
 
