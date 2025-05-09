@@ -63,9 +63,15 @@ io.use((socket, next) => {
     }
 });
 
+function decryptUserInfo(token: string): Pick<User, 'id' | 'username' | 'displayName'> {
+    const user = jwt.verify(token, JWT_SECRET) as Pick<User, 'id' | 'username' | 'displayName'>;
+    user.id = user.id.toString();  // This is necessary otherwise 'user.id' is of type 'number'.
+    return user;
+}
+
 // Returns the userIds of the users which are currently online and are in at least one common room with the given user (socket).
 // So basically returns "friends online".
-function getFriendsOnline(socket: WebSocket): String[] {
+function getFriendsOnline(socket: WebSocket): string[] {
     const roomsMap = io.of('/').adapter.sids;  // Map<SocketId, Set<Room>>
     const friendsOnline = [];
     for (const [userId, socketId] of userSessions) {
@@ -93,9 +99,9 @@ async function checkAdmin(userId: string, channelId: string) {
 }
 
 // Handle the initial connection with the user.
-async function initialConnection(socket: WebSocket): Promise<User> {
+async function initialConnection(socket: WebSocket): Promise<Pick<User, 'id' | 'username' | 'displayName'>> {
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
-    const user = jwt.verify(token, JWT_SECRET) as User;  // Decrypt user info.
+    const user = decryptUserInfo(token);
 
     userSessions.set(user.id, socket.id);
 
@@ -152,9 +158,12 @@ io.on("connection", async (socket) => {
                 if (userSocketId) {
                     const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
                     userSocket.join(channelId);
-                    //userSocket.join('Temporary-room-to-send-the-new-users-the-necessary-channel-info');  // tmp
+                    userSocket.join('Temporary-room-to-send-the-new-users-the-necessary-channel-info');
                 }
             }
+
+            // Send info to the newly added users.
+            io.to('Temporary-room-to-send-the-new-users-the-necessary-channel-info').emit('you-were-added-to-channel' /* to do */);
 
             // Send info to the users already in the channel (excluding the admin).
             socket.to(channelId).emit('new-users-added-to-channel', channelId, usersAdded);

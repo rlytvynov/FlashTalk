@@ -34,11 +34,11 @@ function ChatWrapper() {
             store.dispatch(addMembersToChannel({ channelId, newMembers }));
         });
 
-        socket.on('user-is-offline', userId => {
+        socket.on('user-is-offline', (userId: string) => {
             store.dispatch(updateMembersOnlineStatus([{ userId, isOnline: false }]));
         });
 
-        socket.on('user-is-online', userId => {
+        socket.on('user-is-online', (userId: string) => {
             store.dispatch(updateMembersOnlineStatus([{ userId, isOnline: true }]));
         });
         

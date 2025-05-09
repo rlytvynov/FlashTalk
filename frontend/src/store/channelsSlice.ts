@@ -118,7 +118,7 @@ const channelsSlice = createSlice({
         },
         addMembersToChannel: (state, action: PayloadAction<{ channelId: string; newMembers: ChannelMember[] }>) => { 
             const channel = state.channels.find(channel => channel.id === action.payload.channelId);
-            channel?.members.push(...action.payload.newMembers);  // This pushes plain objects which is not what we want (the other components don't work with plain objects).
+            channel?.members.push(...action.payload.newMembers);
         },
         removeMemberFromChannel: (state, action: { payload: { channelId: string, memberId: string } }) => {
             const channel = state.channels.find(channel => channel.id === action.payload.channelId);
@@ -126,21 +126,20 @@ const channelsSlice = createSlice({
             channel?.members.splice(memberIndex as number, 1);
         },
         // The messages in every given subarray must be from the same channel.
-        appendMessagesToChannels: (state, action: { payload: Message[][] }) => {
+        appendMessagesToChannels: (state, action: PayloadAction<Message[][]>) => {
             for (const channelMessages of action.payload) {
-                if (channelMessages.length === 0) continue;
                 const channel = state.channels.find(channel => channel.id === channelMessages[0].channelid);
-                channel?.messages.push(...channelMessages);  // This may be wrong (the types are wrong).
+                channel?.messages.push(...channelMessages);
             }
         },
-        appendMessageToChannel: (state, action: { payload: Message }) => {
+        appendMessageToChannel: (state, action: PayloadAction<Message>) => {
             const channel = state.channels.find(channel => channel.id === action.payload.channelid);
             channel?.messages.push(action.payload);
         },
-        updateMembersOnlineStatus: (state, action: { payload: { userId: string, isOnline: boolean }[] }) => {
+        updateMembersOnlineStatus: (state, action: PayloadAction<{ userId: string, isOnline: boolean }[]>) => {
             for (const channel of state.channels) {
                 for (const user of action.payload) {
-                    const member = channel.members.find(member => member.id === user.userId);
+                    const member = channel.members.find(member => member.id == user.userId);  // In the initial fetch the userIds are numbers. That is why we use '==' instead of '==='.
                     if (member) member.online = user.isOnline;
                 }
             }
