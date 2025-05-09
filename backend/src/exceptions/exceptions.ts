@@ -1,11 +1,25 @@
-export class PermissionError extends Error {
+class AuthenticationError extends Error {
     constructor(message: string) {
         super(message);
     }
 }
 
-export class ResourceDoesNotExistError extends Error {
+class InvalidOperationError extends Error {
     constructor(message: string) {
         super(message);
     }
 }
+
+class PermissionError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+class ResourceDoesNotExistError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+export default { AuthenticationError, InvalidOperationError, PermissionError, ResourceDoesNotExistError };

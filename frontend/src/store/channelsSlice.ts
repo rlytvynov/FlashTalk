@@ -1,4 +1,4 @@
-import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {fetchDataAuth} from "@/utils/fetch.ts";
 import {Channel, ChannelMember} from "../types/channel.ts";
 import {Message} from "@/types/message.ts";
@@ -116,20 +116,21 @@ const channelsSlice = createSlice({
                 message: action.payload.message
             }
         },
-        addMembersToChannel: (state, action: { payload: { channelId: string, newMembers: ChannelMember[] } }) => { 
-            /* to do ... */
-            console.log(action.payload);  // tmp
+        addMembersToChannel: (state, action: PayloadAction<{ channelId: string; newMembers: ChannelMember[] }>) => { 
+            const channel = state.channels.find(channel => channel.id === action.payload.channelId);
+            channel?.members.push(...action.payload.newMembers);  // This pushes plain objects which is not what we want (the other components don't work with plain objects).
         },
         removeMemberFromChannel: (state, action: { payload: { channelId: string, memberId: string } }) => {
-            /* to do ... */
-            console.log(action.payload);  // tmp
+            const channel = state.channels.find(channel => channel.id === action.payload.channelId);
+            const memberIndex = channel?.members.findIndex(member => member.id === action.payload.memberId);
+            channel?.members.splice(memberIndex as number, 1);
         },
         // The messages in every given subarray must be from the same channel.
         appendMessagesToChannels: (state, action: { payload: Message[][] }) => {
             for (const channelMessages of action.payload) {
                 if (channelMessages.length === 0) continue;
                 const channel = state.channels.find(channel => channel.id === channelMessages[0].channelid);
-                channel?.messages.push(...channelMessages);
+                channel?.messages.push(...channelMessages);  // This may be wrong (the types are wrong).
             }
         },
         appendMessageToChannel: (state, action: { payload: Message }) => {

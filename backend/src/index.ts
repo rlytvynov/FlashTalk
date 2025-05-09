@@ -8,7 +8,7 @@ import { httpCorsOptions, webSocketCorsOptions } from "@config/corsConfig";
 import pool from "@config/databaseConfig";
 import { JWT_SECRET } from '@config/envConfig'
 import { SERVER_HOSTNAME, SERVER_PORT } from "@config/envConfig";
-import { PermissionError, ResourceDoesNotExistError } from './exceptions/exceptions'
+import except from './exceptions/exceptions'
 import responseMiddleware from "@middlewares/responseTypeMiddlware";
 import authRouter from "@routes/authRouter";
 import channelsRouter from "@routes/channelsRouter";
@@ -52,14 +52,14 @@ type WebSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, an
 // Middleware to verify the user token.
 io.use((socket, next) => {
     const token = socket.handshake.headers['authorization'];  // The user must provide a token when initiating a connection.
-    if (!token) return next(new Error('Authorization token is missing!'));
+    if (!token) return next(new except.AuthenticationError('Authorization token is missing!'));
 
     try {
         jwt.verify(token, JWT_SECRET) as { id: string };
         return next();
     } catch (err) {  // Should do better error handling here.
         console.log(err)
-        return next(new Error('Invalid token!'));
+        return next(new except.AuthenticationError('Invalid token!'));
     }
 });
 
@@ -86,10 +86,10 @@ async function checkAdmin(userId: string, channelId: string) {
     const result = await pool.query('SELECT adminId FROM channels WHERE id = $1', [parseInt(channelId)]);  // Get the adminId of the channel.
             
     if (result.rows.length === 0)
-        throw new ResourceDoesNotExistError('Error! The channel does not exist.');
+        throw new except.ResourceDoesNotExistError('Error! The channel does not exist.');
     
     if (parseInt(userId) !== result.rows[0].adminid)
-        throw new PermissionError('You cannot add or remove users because you are not an admin of this channel!');
+        throw new except.PermissionError('You cannot add or remove users because you are not an admin of this channel!');
 }
 
 // Handle the initial connection with the user.
@@ -108,19 +108,7 @@ async function initialConnection(socket: WebSocket): Promise<User> {
         socket.to(channel.id).emit('user-is-online', user.id);
     }
 
-    const channelsMessages: (Message & { channelid: string })[][] = channelsOfUser.rows.map(channel => {
-        // Add property 'channelid' to every message.
-        const messages = channel.messages.map((message: Message) => {
-            return {...message, channelid: channel.id.toString() };
-        });
-        return messages;
-    });
-
-    const friendsOnline = getFriendsOnline(socket);
-
-    // At the moment we're sending only the last 10 messages per channel. If we don't implement "load previous messages" we must 
-    // change this to send the whole chat history.
-    io.to(socket.id).emit('initial-connection', channelsMessages, friendsOnline);
+    io.to(socket.id).emit('initial-connection', getFriendsOnline(socket));
 
     return user;
 };
@@ -151,11 +139,11 @@ io.on("connection", async (socket) => {
     socket.on('add-users-to-channel', async (channelId: string, userIds: string[], callback) => {
         const usersAdded = [];  // Successfully added users.
         try {
-            checkAdmin(user.id, channelId);
+            await checkAdmin(user.id, channelId);
 
             for (const userId of userIds) {
                 await dbQueries.addUserToChannel(userId, channelId);
-                const user = await dbQueries.getUserById(userId);
+                const user = await dbQueries.getUserById(userId);  // Get the necessary info to send to the other users in the channel.
                 (user as any).online = userSessions.has(userId);
                 usersAdded.push(user);
 
@@ -164,25 +152,28 @@ io.on("connection", async (socket) => {
                 if (userSocketId) {
                     const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
                     userSocket.join(channelId);
+                    //userSocket.join('Temporary-room-to-send-the-new-users-the-necessary-channel-info');  // tmp
                 }
             }
 
-            // TO DO:
-            //  - Send info to the newly added user and to the other users in the channel (this is not entirely necessary because they can get the changes on page reload).
+            // Send info to the users already in the channel (excluding the admin).
+            socket.to(channelId).emit('new-users-added-to-channel', channelId, usersAdded);
             
-            if (callback) callback(null, usersAdded);  // Send back added users to the admin who added them.
+            if (callback) callback(null, usersAdded);  // Send back info to the admin who added the users.
 
         } catch (error) {
             if (callback) callback(error, usersAdded);
         }
     });
 
-    // TO DO: test if this works.
-    // TO DO: don't allow admins to remove themselves or add some other safeguard.
     socket.on('remove-user-from-channel', async (channelId: string, userId: string, callback) => {
         try {
-            checkAdmin(user.id, channelId);
-            dbQueries.removeUserFromChannel(userId, channelId);
+            await checkAdmin(user.id, channelId);
+            
+            // At the moment admins cannot ever leave the channel. Obviously it would be a lot better if they can but for now this is simple and it works.
+            if (user.id === userId) throw new except.InvalidOperationError('You are admin. You cannot remove yourself from the channel.');
+
+            await dbQueries.removeUserFromChannel(userId, channelId);
 
             // Remove user from the channel room if they are online.
             const userSocketId = userSessions.get(userId);
@@ -194,7 +185,7 @@ io.on("connection", async (socket) => {
             // TO DO:
             //  - Send info to the removed user and to the other users in the channel (this is not entirely necessary because they can get the changes on page reload).
 
-            if (callback) callback(null);  // TO DO: finish this callback.
+            if (callback) callback(null);
 
         } catch (error) {
             if (callback) callback(error);

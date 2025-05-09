@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 
 import ChatPage from '@/pages/chat/ChatPage.tsx';
 import { initializeSocket, socket } from '@/socket.ts';
-import { appendMessageToChannel, appendMessagesToChannels, updateMembersOnlineStatus } from "@/store/channelsSlice.ts";
+import { addMembersToChannel, appendMessageToChannel, updateMembersOnlineStatus } from "@/store/channelsSlice.ts";
 import store from "@/store/store.ts";
+import { ChannelMember } from '@/types/channel'
 import { Message } from '@/types/message';
 
 function ChatWrapper() {
@@ -17,10 +18,7 @@ function ChatWrapper() {
         socket.on('connect', () => { /* TO DO optional: prompt the user that they are online. */});
         socket.on('disconnect', () => { /* TO DO optional: prompt the user that they are offline. */ });
 
-        socket.on('initial-connection', (channelsMessages, friendsOnline: string[]) => {
-            //store.dispatch(appendMessagesToChannels(channelsMessages));  // this may not be necessary
-            
-            console.log(friendsOnline);
+        socket.on('initial-connection', (friendsOnline: string[]) => {
             setTimeout(() => {
                 store.dispatch(updateMembersOnlineStatus(friendsOnline.map(userId => {
                     return { userId, isOnline: true };
@@ -30,6 +28,10 @@ function ChatWrapper() {
 
         socket.on('new-message', (message: Message) => {
             store.dispatch(appendMessageToChannel(message));
+        });
+
+        socket.on('new-users-added-to-channel', (channelId: string, newMembers: ChannelMember[]) => {
+            store.dispatch(addMembersToChannel({ channelId, newMembers }));
         });
 
         socket.on('user-is-offline', userId => {
@@ -46,6 +48,7 @@ function ChatWrapper() {
             socket?.off('disconnect');
             socket?.off('initial-connection');
             socket?.off('new-message');
+            socket?.off('new-users-added-to-channel');
             socket?.off('user-is-offline');
             socket?.off('user-is-online');
             socket?.disconnect();
