@@ -139,7 +139,7 @@ const channelsSlice = createSlice({
         updateMembersOnlineStatus: (state, action: PayloadAction<{ userId: string, isOnline: boolean }[]>) => {
             for (const channel of state.channels) {
                 for (const user of action.payload) {
-                    const member = channel.members.find(member => member.id == user.userId);  // In the initial fetch the userIds are numbers. That is why we use '==' instead of '==='.
+                    const member = channel.members.find(member => member.id === user.userId);
                     if (member) member.online = user.isOnline;
                 }
             }

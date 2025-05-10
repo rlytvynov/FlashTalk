@@ -46,16 +46,19 @@ app.use('/api/channels', channelsRouter);
 // Socket connection.
 const server = http.createServer(app);
 const io = new Server(server, { cors: webSocketCorsOptions });
-const userSessions: Map<string, string> = new Map<string, string>();  // Keep track of connected users (userId, socketId).
+const userSessions = new Map<number, string>();  // Keep track of connected users (userId, socketId).
+
 type WebSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
 
-// Middleware to verify the user token.
+
 io.use((socket, next) => {
+    /* Middleware to verify the user token. */
+
     const token = socket.handshake.headers['authorization'];  // The user must provide a token when initiating a connection.
     if (!token) return next(new except.AuthenticationError('Authorization token is missing!'));
 
     try {
-        jwt.verify(token, JWT_SECRET) as { id: string };
+        jwt.verify(token, JWT_SECRET);
         return next();
     } catch (err) {  // Should do better error handling here.
         console.log(err)
@@ -63,15 +66,12 @@ io.use((socket, next) => {
     }
 });
 
-function decryptUserInfo(token: string): Pick<User, 'id' | 'username' | 'displayName'> {
-    const user = jwt.verify(token, JWT_SECRET) as Pick<User, 'id' | 'username' | 'displayName'>;
-    user.id = user.id.toString();  // This is necessary otherwise 'user.id' is of type 'number'.
-    return user;
-}
+function getFriendsOnline(socket: WebSocket): number[] {
+    /* 
+        Returns the userIds of the users which are currently online and are in at least one common room with the given user (socket).
+        So basically returns "friends online".
+    */
 
-// Returns the userIds of the users which are currently online and are in at least one common room with the given user (socket).
-// So basically returns "friends online".
-function getFriendsOnline(socket: WebSocket): string[] {
     const roomsMap = io.of('/').adapter.sids;  // Map<SocketId, Set<Room>>
     const friendsOnline = [];
     for (const [userId, socketId] of userSessions) {
@@ -85,33 +85,23 @@ function getFriendsOnline(socket: WebSocket): string[] {
     return friendsOnline;
 }
 
-// Throws an error if:
-//  - 'channelId' does not exist
-//  - 'userId' is not admin
-async function checkAdmin(userId: string, channelId: string) {
-    const result = await pool.query('SELECT adminId FROM channels WHERE id = $1', [parseInt(channelId)]);  // Get the adminId of the channel.
-            
-    if (result.rows.length === 0)
-        throw new except.ResourceDoesNotExistError('Error! The channel does not exist.');
-    
-    if (parseInt(userId) !== result.rows[0].adminid)
-        throw new except.PermissionError('You cannot add or remove users because you are not an admin of this channel!');
-}
-
-// Handle the initial connection with the user.
 async function initialConnection(socket: WebSocket): Promise<Pick<User, 'id' | 'username' | 'displayName'>> {
+    /* Handle the initial connection with the user. */
+
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
-    const user = decryptUserInfo(token);
+    const user = jwt.verify(token, JWT_SECRET) as Pick<User, 'id' | 'username' | 'displayName'>;
+    
+    console.log('User info:', user);  // tmp
 
     userSessions.set(user.id, socket.id);
 
     // Join user to channels and broadcast that they are online.
-    const channelsOfUser = await pool.query('SELECT * FROM get_user_channels_with_members($1)', [parseInt(user.id)]);
+    const channelsOfUser = await pool.query('SELECT * FROM get_user_channels_with_members($1)', [user.id]);
     for (const channel of channelsOfUser.rows) {
-        socket.join(channel.id);
+        socket.join(channel.id.toString());
         // This is not a good way to broadcast that the user is now online because if another user is let's say in 5 of these rooms
         // they will get 5 of these messages, which is unnecessary. Should fix it!!!
-        socket.to(channel.id).emit('user-is-online', user.id);
+        socket.to(channel.id.toString()).emit('user-is-online', user.id);
     }
 
     io.to(socket.id).emit('initial-connection', getFriendsOnline(socket));
@@ -123,50 +113,50 @@ io.on("connection", async (socket) => {
     
     const user = await initialConnection(socket);
 
-    // Listen for new message from user; write it to the DB; send it to other users.
-    // TO DO: verify the input data before writing to the DB. For example at the moment we can pass in any random 'channelId'.
-    socket.on('new-message', async (channelId: string, authorId: string, messageData: string, callback) => {
-        try {
-            const messages = await pool.query('SELECT * FROM create_message($1, $2, $3)', [parseInt(channelId), parseInt(authorId), messageData]);
-            const message: Message = messages.rows[0];
-            message.authorname = user.displayName;  // The frontend wants the 'displayName' so add it to the message.
-            socket.broadcast.to(channelId).emit('new-message', message);
+    socket.on('new-message', async (channelId: number, authorId: number, messageData: string, callback) => {
+        /* 
+            Listen for new message from user; write it to the DB; send it to other users.
+            TO DO: verify the input data before writing to the DB. For example at the moment we can pass in any random 'channelId'.
+        */
 
-            if (callback) {
-                callback(null, message);
-            }
+        try {
+            const message = await dbQueries.createMessage(channelId, authorId, user.username, messageData);
+            socket.broadcast.to(channelId.toString()).emit('new-message', message);
+
+            if (callback) callback(null, message);
+
         } catch (error) {
-            if (callback) {
-                callback(error, null);
-            }
+            if (callback) callback(error, null);
         }
     });
 
-    socket.on('add-users-to-channel', async (channelId: string, userIds: string[], callback) => {
+    socket.on('add-users-to-channel', async (channelId: number, userIds: number[], callback) => {
         const usersAdded = [];  // Successfully added users.
         try {
-            await checkAdmin(user.id, channelId);
+            await dbQueries.checkAdmin(user.id, channelId);
 
             for (const userId of userIds) {
                 await dbQueries.addUserToChannel(userId, channelId);
                 const user = await dbQueries.getUserById(userId);  // Get the necessary info to send to the other users in the channel.
-                (user as any).online = userSessions.has(userId);
+                (user as any).online = userSessions.has(userId);  // This can be written better.
                 usersAdded.push(user);
 
                 // Add the user to the channel room if they are online.
                 const userSocketId = userSessions.get(userId);
                 if (userSocketId) {
                     const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
-                    userSocket.join(channelId);
+                    userSocket.join(channelId.toString());
                     userSocket.join('Temporary-room-to-send-the-new-users-the-necessary-channel-info');
                 }
             }
 
             // Send info to the newly added users.
-            io.to('Temporary-room-to-send-the-new-users-the-necessary-channel-info').emit('you-were-added-to-channel' /* to do */);
+            io.to('Temporary-room-to-send-the-new-users-the-necessary-channel-info').emit('you-were-added-to-channel'
+                // to do...
+            );
 
             // Send info to the users already in the channel (excluding the admin).
-            socket.to(channelId).emit('new-users-added-to-channel', channelId, usersAdded);
+            socket.to(channelId.toString()).emit('new-users-added-to-channel', channelId, usersAdded);
             
             if (callback) callback(null, usersAdded);  // Send back info to the admin who added the users.
 
@@ -175,9 +165,9 @@ io.on("connection", async (socket) => {
         }
     });
 
-    socket.on('remove-user-from-channel', async (channelId: string, userId: string, callback) => {
+    socket.on('remove-user-from-channel', async (channelId: number, userId: number, callback) => {
         try {
-            await checkAdmin(user.id, channelId);
+            await dbQueries.checkAdmin(user.id, channelId);
             
             // At the moment admins cannot ever leave the channel. Obviously it would be a lot better if they can but for now this is simple and it works.
             if (user.id === userId) throw new except.InvalidOperationError('You are admin. You cannot remove yourself from the channel.');
@@ -188,7 +178,7 @@ io.on("connection", async (socket) => {
             const userSocketId = userSessions.get(userId);
             if (userSocketId) {
                 const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
-                userSocket.leave(channelId);
+                userSocket.leave(channelId.toString());
             }
 
             // TO DO:
