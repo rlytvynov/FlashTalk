@@ -36,6 +36,7 @@ async function checkAdmin(userId: number, channelId: number) {
 async function getChannel(channelId: number): Promise<Channel> {
     const channel: Channel = (await pool.query('SELECT * FROM get_channel($1);', [channelId])).rows[0];
     channel.members.forEach(member => member.online = false);
+    if (!channel.messages) channel.messages = [];
     return channel;
 }
 
@@ -50,8 +51,7 @@ async function getChannelMessages(channelId: number): Promise<Message[]> {
 }
 
 async function getUserById(userId: number): Promise<User> {
-    const result = await pool.query('SELECT id, username, displayname FROM users WHERE id = $1;', [userId]);
-    return result.rows[0];
+    return (await pool.query('SELECT id, username, displayname FROM users WHERE id = $1;', [userId])).rows[0];
 }
 
 export default { addUserToChannel, createMessage, removeUserFromChannel, checkAdmin, getChannel, getUserById };

@@ -147,9 +147,10 @@ io.on("connection", async (socket) => {
 
             // Prepare info to send to new members.
             const channel: Channel = await dbQueries.getChannel(channelId);
+
             channel.members.forEach(member => member.online = userSessions.has(member.id));
 
-            // Send info to the newly added users.
+            // Send info to new channel members
             io.to('Tmp-room-to-send-channel-info-to-new-members').emit('you-were-added-to-channel', channel);
 
             // Send info to the users already in the channel (excluding the admin).
@@ -162,6 +163,7 @@ io.on("connection", async (socket) => {
         }
     });
 
+    // TO DO: make users able to leave the channel.
     socket.on('remove-user-from-channel', async (channelId: number, userId: number, callback) => {
         try {
             await dbQueries.checkAdmin(user.id, channelId);

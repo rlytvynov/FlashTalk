@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 
 import ChatPage from '@/pages/chat/ChatPage.tsx';
 import { initializeSocket, socket } from '@/socket.ts';
-import { addMembersToChannel, appendMessageToChannel, updateMembersOnlineStatus } from "@/store/channelsSlice.ts";
+import { addChannel, addMembersToChannel, appendMessageToChannel, updateMembersOnlineStatus } from "@/store/channelsSlice.ts";
 import store from "@/store/store.ts";
-import { ChannelMember } from '@/types/channel'
+import { Channel, ChannelMember } from '@/types/channel'
 import { Message } from '@/types/message';
 
 function ChatWrapper() {
@@ -32,6 +32,12 @@ function ChatWrapper() {
 
         socket.on('new-users-added-to-channel', (channelId: string, newMembers: ChannelMember[]) => {
             store.dispatch(addMembersToChannel({ channelId, newMembers }));
+        });
+
+        socket.on('you-were-added-to-channel', (partialChannel: Omit<Channel, 'newMessage' | 'searchedMessages'>) => {
+            // TO DO: ask if it is OK to set these values to 'newMessage' and 'searchedMessages'.
+            const channel: Channel = { ...partialChannel, newMessage: false, searchedMessages: { data: [], hasMore: false } };
+            store.dispatch(addChannel(channel));
         });
 
         socket.on('user-is-offline', (userId) => {
