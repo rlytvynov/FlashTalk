@@ -14,8 +14,8 @@ import pool from "@config/databaseConfig";
  */
 export const handleRegister = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { username, email, password, displayName } = req.body;
-        if (!username || !email || !password || !displayName) {
+        const { username, email, password, displayname } = req.body;
+        if (!username || !email || !password || !displayname) {
             return res.status(400).sendJson({}, "All fields are required.");
         }
         if (!isValidEmail(email)) {
@@ -27,7 +27,7 @@ export const handleRegister = async (req: Request, res: Response): Promise<any> 
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const {rows} = await pool.query("SELECT * FROM create_user($1, $2, $3, $4)", [
-            username, email, hashedPassword, displayName
+            username, email, hashedPassword, displayname
         ])
         return res.status(201).sendJson({}, "User registered successfully")
     } catch (error) {
@@ -58,7 +58,7 @@ export const handleLogin = async (req: Request, res: Response): Promise<any> => 
                 id: foundUser.id,
                 email: foundUser.email,
                 username: foundUser.username,
-                displayName: foundUser.displayname
+                displayname: foundUser.displayname
             },
             JWT_SECRET,
             { expiresIn: "7d" }
@@ -68,7 +68,7 @@ export const handleLogin = async (req: Request, res: Response): Promise<any> => 
             user: {
                 id: foundUser.id,
                 username: foundUser.username,
-                displayName: foundUser.displayname,
+                displayname: foundUser.displayname,
                 email: foundUser.email
             }
         }, "LoginPage successful");

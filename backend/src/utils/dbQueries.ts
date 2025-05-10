@@ -1,7 +1,7 @@
 import pool from '@config/databaseConfig'
 import except from '../exceptions/exceptions'
-import { Message } from '../types/channel'
-
+import { Channel, Message } from '../types/channel'
+import { User } from '../types/user'
 
 async function addUserToChannel(userId: number, channelId: number) {
     return await pool.query('SELECT * FROM add_user_to_channel($1, $2);', [userId, channelId]);
@@ -33,10 +33,25 @@ async function checkAdmin(userId: number, channelId: number) {
         throw new except.PermissionError('You cannot add or remove users because you are not an admin of this channel!');
 }
 
-async function getUserById(userId: number): Promise<{ id: number, username: string, displayname: string }> {
+async function getChannel(channelId: number): Promise<Channel> {
+    const channel: Channel = (await pool.query('SELECT * FROM get_channel($1);', [channelId])).rows[0];
+    channel.members.forEach(member => member.online = false);
+    return channel;
+}
+
+// This function may be unnecessary.
+async function getChannelMembers(channelId: number): Promise<User[]> {
+    return (await pool.query('SELECT * FROM get_channel_members($1);', [channelId])).rows;
+}
+
+// This function may be unnecessary.
+async function getChannelMessages(channelId: number): Promise<Message[]> {
+    return (await pool.query('SELECT * FROM get_channel_messages($1);', [channelId])).rows;
+}
+
+async function getUserById(userId: number): Promise<User> {
     const result = await pool.query('SELECT id, username, displayname FROM users WHERE id = $1;', [userId]);
-    
     return result.rows[0];
 }
 
-export default { addUserToChannel, createMessage, removeUserFromChannel, getUserById, checkAdmin };
+export default { addUserToChannel, createMessage, removeUserFromChannel, checkAdmin, getChannel, getUserById };

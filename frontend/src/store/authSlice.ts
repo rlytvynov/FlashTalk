@@ -23,7 +23,7 @@ const initialState: AuthState = {
 
 const fetchRegisterUser = createAsyncThunk<
     {},
-    { username: string; email: string; password: string; displayName: string },
+    { username: string; email: string; password: string; displayname: string },
     { rejectValue: string }
 >(
     "auth/fetchRegisterUser",

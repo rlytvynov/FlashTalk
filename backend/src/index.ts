@@ -13,7 +13,7 @@ import responseMiddleware from "@middlewares/responseTypeMiddlware";
 import authRouter from "@routes/authRouter";
 import channelsRouter from "@routes/channelsRouter";
 import usersRouter from "@routes/usersRouter";
-import { Message } from './types/channel';
+import { Channel } from './types/channel';
 import { User } from './types/user'
 import dbQueries from './utils/dbQueries'
 import { areDisjointSets } from './utils/setOperations'
@@ -50,7 +50,6 @@ const userSessions = new Map<number, string>();  // Keep track of connected user
 
 type WebSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
 
-
 io.use((socket, next) => {
     /* Middleware to verify the user token. */
 
@@ -85,24 +84,20 @@ function getFriendsOnline(socket: WebSocket): number[] {
     return friendsOnline;
 }
 
-async function initialConnection(socket: WebSocket): Promise<Pick<User, 'id' | 'username' | 'displayName'>> {
+async function initialConnection(socket: WebSocket): Promise<Pick<User, 'id' | 'username' | 'displayname'>> {
     /* Handle the initial connection with the user. */
 
     const token = socket.handshake.headers['authorization'] as string;  // Already verified in the io middleware.
-    const user = jwt.verify(token, JWT_SECRET) as Pick<User, 'id' | 'username' | 'displayName'>;
-    
-    console.log('User info:', user);  // tmp
+    const user = jwt.verify(token, JWT_SECRET) as Pick<User, 'id' | 'username' | 'displayname'>; 
 
     userSessions.set(user.id, socket.id);
 
-    // Join user to channels and broadcast that they are online.
     const channelsOfUser = await pool.query('SELECT * FROM get_user_channels_with_members($1)', [user.id]);
-    for (const channel of channelsOfUser.rows) {
-        socket.join(channel.id.toString());
-        // This is not a good way to broadcast that the user is now online because if another user is let's say in 5 of these rooms
-        // they will get 5 of these messages, which is unnecessary. Should fix it!!!
-        socket.to(channel.id.toString()).emit('user-is-online', user.id);
-    }
+    
+    channelsOfUser.rows.forEach(channel => socket.join(channel.id.toString()));
+
+    // Broadcast to all rooms the user is in that they are online.
+    socket.to([...socket.rooms]).emit('user-is-online', user.id);
 
     io.to(socket.id).emit('initial-connection', getFriendsOnline(socket));
 
@@ -110,7 +105,7 @@ async function initialConnection(socket: WebSocket): Promise<Pick<User, 'id' | '
 };
 
 io.on("connection", async (socket) => {
-    
+
     const user = await initialConnection(socket);
 
     socket.on('new-message', async (channelId: number, authorId: number, messageData: string, callback) => {
@@ -120,7 +115,7 @@ io.on("connection", async (socket) => {
         */
 
         try {
-            const message = await dbQueries.createMessage(channelId, authorId, user.username, messageData);
+            const message = await dbQueries.createMessage(channelId, authorId, user.displayname, messageData);
             socket.broadcast.to(channelId.toString()).emit('new-message', message);
 
             if (callback) callback(null, message);
@@ -137,7 +132,7 @@ io.on("connection", async (socket) => {
 
             for (const userId of userIds) {
                 await dbQueries.addUserToChannel(userId, channelId);
-                const user = await dbQueries.getUserById(userId);  // Get the necessary info to send to the other users in the channel.
+                const user = await dbQueries.getUserById(userId);  // Get the necessary info to send to the other users in the channel. I think this can be done outside of the loop and it will be better.
                 (user as any).online = userSessions.has(userId);  // This can be written better.
                 usersAdded.push(user);
 
@@ -146,14 +141,16 @@ io.on("connection", async (socket) => {
                 if (userSocketId) {
                     const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
                     userSocket.join(channelId.toString());
-                    userSocket.join('Temporary-room-to-send-the-new-users-the-necessary-channel-info');
+                    userSocket.join('Tmp-room-to-send-channel-info-to-new-members');
                 }
             }
 
+            // Prepare info to send to new members.
+            const channel: Channel = await dbQueries.getChannel(channelId);
+            channel.members.forEach(member => member.online = userSessions.has(member.id));
+
             // Send info to the newly added users.
-            io.to('Temporary-room-to-send-the-new-users-the-necessary-channel-info').emit('you-were-added-to-channel'
-                // to do...
-            );
+            io.to('Tmp-room-to-send-channel-info-to-new-members').emit('you-were-added-to-channel', channel);
 
             // Send info to the users already in the channel (excluding the admin).
             socket.to(channelId.toString()).emit('new-users-added-to-channel', channelId, usersAdded);
@@ -194,9 +191,7 @@ io.on("connection", async (socket) => {
     socket.on('disconnecting', () => {
         // Broadcast the user is offline.
         // This line is not in the 'disconnect' listener because 'socket.rooms' is already deleted there.
-        // This is not a good way to broadcast that the user is now offline because if another user is let's say in 5 of these rooms
-        // they will get 5 of these messages, which is unnecessary. Should be fixed!!!
-        socket.rooms.forEach(room => socket.to(room).emit('user-is-offline', user.id));
+        socket.to([...socket.rooms]).emit('user-is-offline', user.id);
     });
 
     socket.on('disconnect', () => {
@@ -204,7 +199,7 @@ io.on("connection", async (socket) => {
     });
 });
 
-//Server start
+// Start the server.
 server.listen(SERVER_PORT, () => {
     console.log(`[server]: Server is running at http://${SERVER_HOSTNAME}:${SERVER_PORT}`);
 });

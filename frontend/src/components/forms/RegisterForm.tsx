@@ -78,7 +78,7 @@ const RegisterForm = () => {
                 username: formData.nickname,
                 email: formData.email,
                 password: formData.password,
-                displayName: formData.fullName
+                displayname: formData.fullName
             })).unwrap();
             navigate("/login")
         } catch (error) {

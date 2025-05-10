@@ -1,4 +1,4 @@
-import {User} from "./user";
+import { User } from './user'
 
 export interface Message {
     id: number;
@@ -9,10 +9,13 @@ export interface Message {
     data: string;
 }
 
+export type ChannelMember = User & { online: boolean };
+
 export interface Channel {
     id: number;
-    name: string
-    description: string
-    members: Pick<User, "id" | "username" | "displayName">[];
+    name: string;
+    description: string;
+    adminid: string;
+    members: ChannelMember[];
     messages: Message[];
 }

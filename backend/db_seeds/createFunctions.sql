@@ -229,6 +229,95 @@ BEGIN
     RETURNING users_to_channel.id, users_to_channel.userId, users_to_channel.channelId;
 END;
 $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION get_channel_members(_channel_id INTEGER)
+RETURNS TABLE (
+    id INTEGER,
+    username VARCHAR,
+    displayName VARCHAR
+) AS $$
+BEGIN
+    -- Check if the channel exists
+    IF NOT EXISTS (SELECT 1 FROM channels WHERE channels.id = _channel_id) THEN
+        RAISE EXCEPTION 'Channel with ID % does not exist', _channel_id;
+    END IF;
+
+    -- Return the members of the channel
+    RETURN QUERY
+    SELECT users.id, users.username, users.displayName
+    FROM users
+    JOIN users_to_channel utc ON users.id = utc.userId
+    WHERE utc.channelId = _channel_id;
+END;
+$$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION get_channel_messages(_channel_id INTEGER)
+RETURNS TABLE (
+    id INTEGER,
+    channelId INTEGER,
+    authorId INTEGER,
+    authorName VARCHAR,
+    data TEXT,
+    date TIMESTAMP
+) AS $$
+BEGIN
+    -- Check if the channel exists
+    IF NOT EXISTS (SELECT 1 FROM channels WHERE channels.id = _channel_id) THEN
+        RAISE EXCEPTION 'Channel with ID % does not exist', _channel_id;
+    END IF;
+
+    -- Return the messages
+    RETURN QUERY
+    SELECT
+        m.id,
+        m.channelId,
+        m.authorId,
+        u.displayName AS authorName,
+        m.data,
+        m.date
+    FROM messages m
+    JOIN users u ON m.authorId = u.id
+    WHERE m.channelId = _channel_id;
+END;
+$$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION get_channel(
+    _channel_id INTEGER
+) RETURNS TABLE (
+    id INTEGER,
+    name VARCHAR,
+    description TEXT,
+    adminId INTEGER,
+    members JSON,
+    messages JSON
+) AS $$
+BEGIN
+    -- Check if the channel exists
+    IF NOT EXISTS (SELECT 1 FROM channels WHERE channels.id = _channel_id) THEN
+        RAISE EXCEPTION 'Channel with ID % does not exist', _channel_id;
+    END IF;
+
+    -- Return the channel info, members, and messages
+    RETURN QUERY
+    SELECT
+        c.id,
+        c.name,
+        c.description,
+        c.adminId,
+        (
+            SELECT json_agg(row_to_json(member_row))
+            FROM (
+                SELECT * FROM get_channel_members(_channel_id)
+            ) AS member_row
+        ) AS members,
+        (
+            SELECT json_agg(row_to_json(message_row))
+            FROM (
+                SELECT * FROM get_channel_messages(_channel_id)
+            ) AS message_row
+        ) AS messages
+    FROM channels c
+    WHERE c.id = _channel_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
 select * from get_user_channels_with_members(2);
 select * from users;
