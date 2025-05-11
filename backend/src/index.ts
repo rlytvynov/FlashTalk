@@ -127,6 +127,7 @@ io.on("connection", async (socket) => {
 
     socket.on('add-users-to-channel', async (channelId: number, userIds: number[], callback) => {
         const usersAdded = [];  // Successfully added users.
+        const oldMemberSocketIds = new Set(io.of('/').adapter.rooms.get(channelId.toString())) || new Set;
         try {
             await dbQueries.checkAdmin(user.id, channelId);
 
@@ -141,20 +142,20 @@ io.on("connection", async (socket) => {
                 if (userSocketId) {
                     const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
                     userSocket.join(channelId.toString());
-                    userSocket.join('Tmp-room-to-send-channel-info-to-new-members');
+                    userSocket.join('Tmp-room-to-send-info-to-new-members');
                 }
             }
 
             // Prepare info to send to new members.
             const channel: Channel = await dbQueries.getChannel(channelId);
-
             channel.members.forEach(member => member.online = userSessions.has(member.id));
 
-            // Send info to new channel members
-            io.to('Tmp-room-to-send-channel-info-to-new-members').emit('you-were-added-to-channel', channel);
+            // Send info to new channel members.
+            io.to('Tmp-room-to-send-info-to-new-members').emit('you-were-added-to-channel', channel);
+            io.in('Tmp-room-to-send-info-to-new-members').socketsLeave('Tmp-room-to-send-info-to-new-members');
 
             // Send info to the users already in the channel (excluding the admin).
-            socket.to(channelId.toString()).emit('new-users-added-to-channel', channelId, usersAdded);
+            socket.to([...oldMemberSocketIds]).emit('new-users-added-to-channel', channelId, usersAdded);
             
             if (callback) callback(null, usersAdded);  // Send back info to the admin who added the users.
 
@@ -166,27 +167,35 @@ io.on("connection", async (socket) => {
     // TO DO: make users able to leave the channel.
     socket.on('remove-user-from-channel', async (channelId: number, userId: number, callback) => {
         try {
-            await dbQueries.checkAdmin(user.id, channelId);
+            if (!(await dbQueries.channelExists(channelId)))
+                throw new except.ResourceDoesNotExistError('Error! The channel does not exist.');
             
-            // At the moment admins cannot ever leave the channel. Obviously it would be a lot better if they can but for now this is simple and it works.
-            if (user.id === userId) throw new except.InvalidOperationError('You are admin. You cannot remove yourself from the channel.');
+            let isAdmin = await dbQueries.isAdmin(user.id, channelId)
+            
+            // For simplicity don't alow admins to leave. Obviously it would be better if they could.
+            if (isAdmin && userId === user.id)
+                throw new except.InvalidOperationError('You are admin. You cannot remove yourself from the channel.');
+            // Don't allow non-admins to remove members.
+            else if (!isAdmin && userId !== user.id)
+                throw new except.PermissionError('You are not an admin of this channel. You cannot remove members.');
 
             await dbQueries.removeUserFromChannel(userId, channelId);
 
-            // Remove user from the channel room if they are online.
-            const userSocketId = userSessions.get(userId);
+            // If user is online, remove them from the room and send them notification.
+            const userSocketId: string | undefined = userSessions.get(userId);
             if (userSocketId) {
                 const userSocket = io.sockets.sockets.get(userSocketId) as WebSocket;
                 userSocket.leave(channelId.toString());
+                io.to(userSocketId).emit('you-were-removed-from-channel', channelId);
             }
+            
+            // Send info to other channel members excluding the admin.
+            socket.to(channelId.toString()).emit('user-removed-from-channel', channelId, userId);
 
-            // TO DO:
-            //  - Send info to the removed user and to the other users in the channel (this is not entirely necessary because they can get the changes on page reload).
-
-            if (callback) callback(null);
+            callback(null);  // Notify the admin.
 
         } catch (error) {
-            if (callback) callback(error);
+            callback(error);
         }
     });
 

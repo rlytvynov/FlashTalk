@@ -20,6 +20,11 @@ async function removeUserFromChannel(userId: number, channelId: number) {
     await pool.query('DELETE FROM users_to_channel WHERE userId = $1 AND channelId = $2;', [userId, channelId]);
 }
 
+async function channelExists(channelId: number): Promise<boolean> {
+    const result = await pool.query('SELECT id FROM channels WHERE id = $1;', [channelId]);
+    return result.rows.length !== 0;
+}
+
 // Throws an error if:
 //  - 'channelId' does not exist
 //  - 'userId' is not admin
@@ -40,18 +45,14 @@ async function getChannel(channelId: number): Promise<Channel> {
     return channel;
 }
 
-// This function may be unnecessary.
-async function getChannelMembers(channelId: number): Promise<User[]> {
-    return (await pool.query('SELECT * FROM get_channel_members($1);', [channelId])).rows;
-}
-
-// This function may be unnecessary.
-async function getChannelMessages(channelId: number): Promise<Message[]> {
-    return (await pool.query('SELECT * FROM get_channel_messages($1);', [channelId])).rows;
-}
-
 async function getUserById(userId: number): Promise<User> {
     return (await pool.query('SELECT id, username, displayname FROM users WHERE id = $1;', [userId])).rows[0];
 }
 
-export default { addUserToChannel, createMessage, removeUserFromChannel, checkAdmin, getChannel, getUserById };
+// Expects valid 'channelId'.
+async function isAdmin(userId: number, channelId: number): Promise<boolean> {
+    const result = await pool.query('SELECT adminid FROM channels WHERE id = $1;', [channelId]);
+    return userId === result.rows[0].adminid;
+}
+
+export default { addUserToChannel, createMessage, removeUserFromChannel, channelExists, checkAdmin, getChannel, getUserById, isAdmin };

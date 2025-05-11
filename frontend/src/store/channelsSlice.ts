@@ -120,6 +120,10 @@ const channelsSlice = createSlice({
             // Do we keep the channels in a particular order???
             state.channels.push(action.payload);
         },
+        removeChannel: (state, action: PayloadAction<string>) => {
+            const channelIndex = state.channels.findIndex(channel => channel.id === action.payload);
+            state.channels.splice(channelIndex, 1);
+        },
         addMembersToChannel: (state, action: PayloadAction<{ channelId: string; newMembers: ChannelMember[] }>) => { 
             const channel = state.channels.find(channel => channel.id === action.payload.channelId);
             channel?.members.push(...action.payload.newMembers);
@@ -140,9 +144,9 @@ const channelsSlice = createSlice({
         appendMessageToChannel: (state, action: PayloadAction<Message>) => {
             const channel = state.channels.find(channel => channel.id === action.payload.channelid);
             channel?.messages.push(action.payload);
-            
+
             console.log('Message received from the server:', action.payload);  // tmp
-            console.log('Message pushed to store:', channel?.messages[channel?.messages.length - 1]);  // tmp
+            console.log('Message pushed to state:', channel?.messages[channel?.messages.length - 1]);  // tmp
         },
         updateMembersOnlineStatus: (state, action: PayloadAction<{ userId: string, isOnline: boolean }[]>) => {
             for (const channel of state.channels) {
@@ -216,5 +220,5 @@ const channelsSlice = createSlice({
     }
 
 });
-export const { utilizeSearchedMessages, setActiveChannelId, clearChannelError, setChannelError, addChannel, addMembersToChannel, removeMemberFromChannel, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
+export const { utilizeSearchedMessages, setActiveChannelId, clearChannelError, setChannelError, addChannel, removeChannel, addMembersToChannel, removeMemberFromChannel, appendMessagesToChannels, appendMessageToChannel, updateMembersOnlineStatus } = channelsSlice.actions;
 export default channelsSlice.reducer;

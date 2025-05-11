@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import ChatPage from '@/pages/chat/ChatPage.tsx';
 import { initializeSocket, socket } from '@/socket.ts';
-import { addChannel, addMembersToChannel, appendMessageToChannel, updateMembersOnlineStatus } from "@/store/channelsSlice.ts";
+import { addChannel, removeChannel, addMembersToChannel, removeMemberFromChannel, appendMessageToChannel, updateMembersOnlineStatus } from "@/store/channelsSlice.ts";
 import store from "@/store/store.ts";
 import { Channel, ChannelMember } from '@/types/channel'
 import { Message } from '@/types/message';
@@ -32,12 +32,21 @@ function ChatWrapper() {
 
         socket.on('new-users-added-to-channel', (channelId: string, newMembers: ChannelMember[]) => {
             store.dispatch(addMembersToChannel({ channelId, newMembers }));
+            console.log('here');  // tmp
+        });
+
+        socket.on('user-removed-from-channel', (channelId: string, memberId: string) => {
+            store.dispatch(removeMemberFromChannel({ channelId, memberId }));
         });
 
         socket.on('you-were-added-to-channel', (partialChannel: Omit<Channel, 'newMessage' | 'searchedMessages'>) => {
             // TO DO: ask if it is OK to set these values to 'newMessage' and 'searchedMessages'.
             const channel: Channel = { ...partialChannel, newMessage: false, searchedMessages: { data: [], hasMore: false } };
             store.dispatch(addChannel(channel));
+        });
+
+        socket.on('you-were-removed-from-channel', (channelId: string) => {
+            store.dispatch(removeChannel(channelId));
         });
 
         socket.on('user-is-offline', (userId) => {
@@ -55,6 +64,9 @@ function ChatWrapper() {
             socket?.off('initial-connection');
             socket?.off('new-message');
             socket?.off('new-users-added-to-channel');
+            socket?.off('user-removed-from-channel');
+            socket?.off('you-were-added-to-channel');
+            socket?.off('you-were-removed-from-channel');
             socket?.off('user-is-offline');
             socket?.off('user-is-online');
             socket?.disconnect();
