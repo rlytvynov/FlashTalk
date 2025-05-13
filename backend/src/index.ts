@@ -59,7 +59,7 @@ io.use((socket, next) => {
     try {
         jwt.verify(token, JWT_SECRET);
         return next();
-    } catch (err) {  // Should do better error handling here.
+    } catch (err) {
         console.log(err)
         return next(new except.AuthenticationError('Invalid token!'));
     }
@@ -127,7 +127,7 @@ io.on("connection", async (socket) => {
 
     socket.on('add-users-to-channel', async (channelId: number, userIds: number[], callback) => {
         const usersAdded = [];  // Successfully added users.
-        const oldMemberSocketIds = new Set(io.of('/').adapter.rooms.get(channelId.toString())) || new Set;
+        const oldMembersSocketIds = new Set(io.of('/').adapter.rooms.get(channelId.toString())) || new Set;
         try {
             await dbQueries.checkAdmin(user.id, channelId);
 
@@ -155,7 +155,7 @@ io.on("connection", async (socket) => {
             io.in('Tmp-room-to-send-info-to-new-members').socketsLeave('Tmp-room-to-send-info-to-new-members');
 
             // Send info to the users already in the channel (excluding the admin).
-            socket.to([...oldMemberSocketIds]).emit('new-users-added-to-channel', channelId, usersAdded);
+            socket.to([...oldMembersSocketIds]).emit('new-users-added-to-channel', channelId, usersAdded);
             
             if (callback) callback(null, usersAdded);  // Send back info to the admin who added the users.
 
@@ -164,7 +164,6 @@ io.on("connection", async (socket) => {
         }
     });
 
-    // TO DO: make users able to leave the channel.
     socket.on('remove-user-from-channel', async (channelId: number, userId: number, callback) => {
         try {
             if (!(await dbQueries.channelExists(channelId)))
@@ -175,7 +174,7 @@ io.on("connection", async (socket) => {
             // For simplicity don't alow admins to leave. Obviously it would be better if they could.
             if (isAdmin && userId === user.id)
                 throw new except.InvalidOperationError('You are admin. You cannot remove yourself from the channel.');
-            // Don't allow non-admins to remove members.
+            // Non-admins can only remove themselves.
             else if (!isAdmin && userId !== user.id)
                 throw new except.PermissionError('You are not an admin of this channel. You cannot remove members.');
 

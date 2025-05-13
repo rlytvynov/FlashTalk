@@ -133,7 +133,6 @@ const channelsSlice = createSlice({
             const memberIndex = channel?.members.findIndex(member => member.id === action.payload.memberId);
             channel?.members.splice(memberIndex as number, 1);
         },
-        // This function may be unnecessary.
         // The messages in every given subarray must be from the same channel.
         appendMessagesToChannels: (state, action: PayloadAction<Message[][]>) => {
             for (const channelMessages of action.payload) {

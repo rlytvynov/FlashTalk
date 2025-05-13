@@ -32,7 +32,6 @@ function ChatWrapper() {
 
         socket.on('new-users-added-to-channel', (channelId: string, newMembers: ChannelMember[]) => {
             store.dispatch(addMembersToChannel({ channelId, newMembers }));
-            console.log('here');  // tmp
         });
 
         socket.on('user-removed-from-channel', (channelId: string, memberId: string) => {
